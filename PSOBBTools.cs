@@ -1,8 +1,9 @@
 using System;
 using System.IO;
 using System.Windows.Forms;
-using System.Xml.Serialization;         // XmlSerializer
-using System.Collections;               // Queue
+using System.Xml.Serialization;     // XmlSerializer
+using System.Collections;           // ICollection
+using System.Collections.Generic;   // Queue<>
 
 namespace PSOBBTools
 {
@@ -59,6 +60,7 @@ namespace PSOBBTools
 		private Settings settings = new Settings();
 
 		// メニュー
+        private MenuItem menuChatLog = new MenuItem();
 		private MenuItem menuMagTimer = new MenuItem();
         private MenuItem menuWindowResize = new MenuItem();
         private MenuItem menuLine1 = new MenuItem();
@@ -72,22 +74,24 @@ namespace PSOBBTools
 		private ContextMenu contextMenu = new ContextMenu();
 		// タスクトレイのアイコン
 		private NotifyIcon notifyIcon = new NotifyIcon();
-		// ログ監視
+		// チームチャットログ監視
 		private FileSystemWatcher logWatcher = new FileSystemWatcher();
 		// SS監視
 		private FileSystemWatcher bmpWatcher = new FileSystemWatcher();
 		// システムボタン用タイマ
 		private Timer systemButtonTimer = new Timer();
 
-		// 設定ウィンドウ
-		private Form formSettings;
+		// チャットログウィンドウ
+		private Form formChatLog;
 		// マグタイマーウィンドウ
 		private Form formMagTimer;
         // ウィンドウサイズの変更ウィンドウ
         private Form formWindowResize;
+		// 設定ウィンドウ
+		private Form formSettings;
 
 		// 変換するSSリスト
-		private Queue convertFileList = Queue.Synchronized(new Queue());
+        private Queue<ThreadingImageConverter.convertFile> convertFileList = new Queue<ThreadingImageConverter.convertFile>();
 		// ThreadingImageConverterスレッド
 		private System.Threading.Thread ImageConverterThread;
 		// ThreadingImageConverter
@@ -101,15 +105,51 @@ namespace PSOBBTools
 			// 設定読み込み
 			Load();
 
-			// 設定の反映
-			ValidateSettings();
+			// 設定の適用
+			ApplySettings();
 
 			// ThreadingImageConverter
 			imageConverter = new ThreadingImageConverter(convertFileList);
+
+            // イベントハンドラを追加
+            settings.Changed += new EventHandler(settings_Changed);
 		}
 
-		// 初期化処理
-		private void InitializeComponent()
+        public void Dispose()
+        {
+            // 各フォームを閉じる
+            if (formMagTimer != null && !formMagTimer.IsDisposed)
+            {
+                formMagTimer.Dispose();
+            }
+            if (formChatLog != null && !formChatLog.IsDisposed)
+            {
+                formChatLog.Dispose();
+            }
+
+            // イベントハンドラを削除
+            settings.Changed -= new EventHandler(settings_Changed);
+
+            // 監視を停止
+            logWatcher.EnableRaisingEvents = bmpWatcher.EnableRaisingEvents = false;
+            
+            // タスクトレイのアイコンを非表示
+            notifyIcon.Visible = false;
+
+            // 設定保存
+            Save();
+
+            // スレッドの終了を待つ
+            if (ImageConverterThread != null)
+            {
+                ImageConverterThread.Join();
+            }
+        }
+
+        /// <summary>
+        /// 初期化処理
+        /// </summary>
+        private void InitializeComponent()
 		{
 			try
 			{
@@ -132,11 +172,17 @@ namespace PSOBBTools
 			}
 		}
 
-		// コンテキストメニュー作成
-		private void CreateMenu()
+        /// <summary>
+        /// コンテキストメニュー作成
+        /// </summary>
+        private void CreateMenu()
 		{
+            menuChatLog.Text = "チャットログ(&C)";
+            menuChatLog.DefaultItem = true;
+            menuChatLog.Click += new EventHandler(this.menuChatLog_Click);
+            contextMenu.MenuItems.Add(menuChatLog);
+
 			menuMagTimer.Text = "マグタイマー(&M)";
-			menuMagTimer.DefaultItem = true;
 			menuMagTimer.Click += new EventHandler(this.menuMagTimer_Click);
 			contextMenu.MenuItems.Add(menuMagTimer);
 
@@ -176,8 +222,10 @@ namespace PSOBBTools
 			contextMenu.Popup += new EventHandler(contextMenu_Popup);
 		}
 
-		// タスクトレイのアイコン作成
-		private void CreateNotifyIcon()
+        /// <summary>
+        /// タスクトレイのアイコン作成
+        /// </summary>
+        private void CreateNotifyIcon()
 		{
 			System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
 			notifyIcon.Icon = new System.Drawing.Icon(assembly.GetManifestResourceStream("PSOBBTools.tray.ico"), 16, 16);
@@ -187,22 +235,24 @@ namespace PSOBBTools
 			notifyIcon.Visible = true;
 		}
 
-		// 監視設定
-		private void CreateWatcher()
+        /// <summary>
+        /// 監視設定
+        /// </summary>
+        private void CreateWatcher()
 		{
-			// ログ監視
-			logWatcher.Filter = settings.TeamChatFileFilter;
+            // チームチャットログ監視
+            logWatcher.Filter = Settings.teamChatFilePrefix + "*" + Settings.teamChatFileExtension;
 			logWatcher.NotifyFilter = NotifyFilters.LastWrite;
 			logWatcher.Changed += new FileSystemEventHandler(LogFile_Changed);
 
 			// SS監視
-			bmpWatcher.Filter = settings.SSFileFilter;
+            bmpWatcher.Filter = Settings.ssFileFilter;
 			bmpWatcher.Created += new FileSystemEventHandler(BmpFile_Created);
 		}
 
 		private void notifyIcon_DoubleClick(object sender, System.EventArgs e)
 		{
-			ShowMagTimer();
+            ShowChatLog();
 		}
 
 		private void contextMenu_Popup(object sender, System.EventArgs e)
@@ -214,29 +264,17 @@ namespace PSOBBTools
 
 		private void menuTeamChime_Click(object sender, System.EventArgs e)
 		{
-			// 変更結果の反映
 			settings.TeamChimeEnabled = !settings.TeamChimeEnabled;
-
-			// 監視の有効化/無効化
-			logWatcher.EnableRaisingEvents = settings.TeamChimeEnabled;
 		}
 
 		private void menuSSCompression_Click(object sender, System.EventArgs e)
 		{
-			// 変更結果の反映
 			settings.SSCompressionEnabled = !settings.SSCompressionEnabled;
-
-			// 監視の有効化/無効化
-			bmpWatcher.EnableRaisingEvents = settings.SSCompressionEnabled;
 		}
 
 		private void menuSystemButtons_Click(object sender, System.EventArgs e)
 		{
-			// 変更結果の反映
 			settings.SystemButtonsEnabled = !settings.SystemButtonsEnabled;
-
-			// タイマーの有効化/無効化
-			systemButtonTimer.Enabled = settings.SystemButtonsEnabled;
 		}
 
 		private void menuSetting_Click(object sender, System.EventArgs e)
@@ -247,6 +285,11 @@ namespace PSOBBTools
 		private void menuMagTimer_Click(object sender, System.EventArgs e)
 		{
 			ShowMagTimer();
+		}
+
+        private void menuChatLog_Click(object sender, System.EventArgs e)
+		{
+            ShowChatLog();
 		}
 
 		private void menuWindowResize_Click(object sender, System.EventArgs e)
@@ -284,44 +327,21 @@ namespace PSOBBTools
 		}
 
         /// <summary>
-        /// 設定ウィンドウ表示
+        /// チャットログウィンドウ表示
         /// </summary>
-        private void ShowSettings()
+        private void ShowChatLog()
 		{
             // すでに表示されているか？
-            if (formSettings == null || formSettings.IsDisposed)
+            if (formChatLog == null || formChatLog.IsDisposed)
 			{
-                // メニューの無効化
-                foreach (MenuItem menu in contextMenu.MenuItems)
-                {
-                    if (!menu.Equals(menuExit))
-                    {
-                        menu.Enabled = false;
-                    }
-                }
-
-			    // 設定ウィンドウ表示
-                using (formSettings = new FormSettings(settings))
-                {
-				    formSettings.ShowDialog();
-                }
-
-				// 設定の反映
-				ValidateSettings();
-
-                // メニューの有効化
-                foreach (MenuItem menu in contextMenu.MenuItems)
-                {
-                    if (!menu.Equals(menuExit))
-                    {
-                        menu.Enabled = true;
-                    }
-                }
-            }
+                // チャットログウィンドウ表示
+                formChatLog = new FormChatLog(settings);
+			    formChatLog.Show();
+			}
 			else
 			{
                 // アクティブにする
-				formSettings.Activate();
+                formChatLog.Activate();
 			}
 		}
 
@@ -334,12 +354,8 @@ namespace PSOBBTools
             if (formMagTimer == null || formMagTimer.IsDisposed)
 			{
 			    // マグタイマーウィンドウ表示
-                using (formMagTimer = new FormMagTimer(settings))
-                {
-				    formMagTimer.Location = settings.MagTimerLocation;
-				    formMagTimer.ShowDialog();
-				    settings.MagTimerLocation = formMagTimer.Location;
-                }
+                formMagTimer = new FormMagTimer(settings);
+			    formMagTimer.Show();
 			}
 			else
 			{
@@ -369,22 +385,44 @@ namespace PSOBBTools
             }
         }
 
-		public void Dispose()
-		{
-			// 設定保存
-			Save();
+        /// <summary>
+        /// 設定ウィンドウ表示
+        /// </summary>
+        private void ShowSettings()
+        {
+            // すでに表示されているか？
+            if (formSettings == null || formSettings.IsDisposed)
+            {
+                // メニューの無効化
+                foreach (MenuItem menu in contextMenu.MenuItems)
+                {
+                    if (!menu.Equals(menuExit))
+                    {
+                        menu.Enabled = false;
+                    }
+                }
 
-			// 後始末
-			logWatcher.EnableRaisingEvents = false;
-			bmpWatcher.EnableRaisingEvents = false;
-			notifyIcon.Visible = false;
+                // 設定ウィンドウ表示
+                using (formSettings = new FormSettings(settings))
+                {
+                    formSettings.ShowDialog();
+                }
 
-			// スレッドの終了を待つ
-			if (ImageConverterThread != null)
-			{
-				ImageConverterThread.Join();
-			}
-		}
+                // メニューの有効化
+                foreach (MenuItem menu in contextMenu.MenuItems)
+                {
+                    if (!menu.Equals(menuExit))
+                    {
+                        menu.Enabled = true;
+                    }
+                }
+            }
+            else
+            {
+                // アクティブにする
+                formSettings.Activate();
+            }
+        }
 
 		/// <summary>
 		/// ログファイル変更イベント
@@ -416,7 +454,7 @@ namespace PSOBBTools
 					cf.FileFormat = "jpg";
 				}
 
-				lock(convertFileList.SyncRoot)
+                lock (((ICollection)convertFileList).SyncRoot)
 				{
 					convertFileList.Enqueue(cf);
 				}
@@ -500,27 +538,30 @@ namespace PSOBBTools
             }
         }
 
-		// 設定のチェックと反映
-		private void ValidateSettings()
+        /// <summary>
+        /// 設定が変更されたイベント
+        /// </summary>
+        private void settings_Changed(object sender, EventArgs e)
+        {
+            ApplySettings();
+        }
+
+        /// <summary>
+        /// 設定の適用
+        /// </summary>
+        private void ApplySettings()
 		{
-			logWatcher.Filter = settings.TeamChatFileFilter;
-			bmpWatcher.Filter = settings.SSFileFilter;
 			systemButtonTimer.Enabled = settings.SystemButtonsEnabled;
 
-			if (settings.PSOBBFolder.Length > 0 && Directory.Exists(settings.PSOBBFolder))
+            // 一旦監視を停止
+            logWatcher.EnableRaisingEvents = bmpWatcher.EnableRaisingEvents = false;
+
+			if (!String.IsNullOrEmpty(settings.PSOBBFolder) && Directory.Exists(settings.PSOBBFolder))
 			{
 				logWatcher.Path = settings.PSOBBFolder + @"\" + Settings.logFolder;
 				bmpWatcher.Path = settings.PSOBBFolder + @"\" + Settings.ssFolder;
 				logWatcher.EnableRaisingEvents = settings.TeamChimeEnabled;
 				bmpWatcher.EnableRaisingEvents = settings.SSCompressionEnabled;
-			}
-			else
-			{
-				MessageBox.Show("PSOBBのフォルダが見つかりません。設定を確認してください。", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
-				settings.TeamChimeEnabled = false;
-				settings.SSCompressionEnabled = false;
-				logWatcher.EnableRaisingEvents = false;
-				bmpWatcher.EnableRaisingEvents = false;
 			}
 		}
 	}

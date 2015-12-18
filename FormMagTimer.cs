@@ -38,7 +38,11 @@ namespace PSOBBTools
 
 			this.settings = settings;
 
-            LoadSettings();
+            // フォームの状態を復元
+            this.Location = settings.MagTimerLocation;
+
+            // 設定の適用
+            ApplySettings();
 
             // イベントハンドラを追加
             settings.Changed += new EventHandler(settings_Changed);
@@ -52,6 +56,12 @@ namespace PSOBBTools
 		/// </summary>
 		protected override void Dispose( bool disposing )
 		{
+            // イベントハンドラを削除
+            settings.Changed -= new EventHandler(settings_Changed);
+
+            // フォームの状態を保存
+            settings.MagTimerLocation = this.Location;
+
 			if( disposing )
 			{
 				if(components != null)
@@ -60,9 +70,6 @@ namespace PSOBBTools
 				}
 			}
 			base.Dispose( disposing );
-
-            // イベントハンドラを削除
-            settings.Changed -= new EventHandler(settings_Changed);
         }
 
 		#region Windows フォーム デザイナで生成されたコード 
@@ -258,15 +265,15 @@ namespace PSOBBTools
         /// <summary>
         /// 設定が変更されたイベント
         /// </summary>
-        void settings_Changed(object sender, EventArgs e)
+        private void settings_Changed(object sender, EventArgs e)
         {
-            LoadSettings();
+            ApplySettings();
         }
 
         /// <summary>
-        /// 設定の読み込み
+        /// 設定の適用
         /// </summary>
-        void LoadSettings()
+        void ApplySettings()
         {
             upDownTime.Value = (decimal)settings.MagTimerTime;
             checkReload.Checked = settings.MagTimerReload;

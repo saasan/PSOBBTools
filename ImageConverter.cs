@@ -1,5 +1,6 @@
 using System;
-using System.Collections;
+using System.Collections;           // ICollection
+using System.Collections.Generic;   // Queue<>
 using System.Drawing.Imaging;
 using System.IO;
 using System.Threading;
@@ -79,7 +80,7 @@ namespace PSOBBTools
 	public class ThreadingImageConverter
 	{
 
-		private Queue filelist;
+        private Queue<convertFile> filelist;
 
 		public struct convertFile
 		{
@@ -111,7 +112,7 @@ namespace PSOBBTools
 			}
 		}
 
-		public ThreadingImageConverter(Queue list)
+        public ThreadingImageConverter(Queue<convertFile> list)
 		{
 			filelist = list;
 		}
@@ -125,16 +126,14 @@ namespace PSOBBTools
 
 		public void Convert()
 		{
-			while (filelist.Count > 0)
+            lock (((ICollection)filelist).SyncRoot)
 			{
-				convertFile c;
+			    while (filelist.Count > 0)
+			    {
+				    convertFile c = filelist.Dequeue();
 
-				lock(filelist.SyncRoot)
-				{
-					c = (convertFile)filelist.Dequeue();
-				}
-
-				ImageConverter.Convert(c.FileName, c.FileFormat);
+				    ImageConverter.Convert(c.FileName, c.FileFormat);
+			    }
 			}
 		}
 	}

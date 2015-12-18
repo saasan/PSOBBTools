@@ -49,34 +49,29 @@ namespace PSOBBTools
 		/// </summary>
 		private void InitializeComponent()
 		{
-			System.Resources.ResourceManager resources = new System.Resources.ResourceManager(typeof(FormSettings));
-			this.PropertyGridSettings = new System.Windows.Forms.PropertyGrid();
-			this.SuspendLayout();
-			// 
-			// PropertyGridSettings
-			// 
-			this.PropertyGridSettings.CommandsVisibleIfAvailable = true;
-			this.PropertyGridSettings.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.PropertyGridSettings.LargeButtons = false;
-			this.PropertyGridSettings.LineColor = System.Drawing.SystemColors.ScrollBar;
-			this.PropertyGridSettings.Location = new System.Drawing.Point(0, 0);
-			this.PropertyGridSettings.Name = "PropertyGridSettings";
-			this.PropertyGridSettings.Size = new System.Drawing.Size(352, 374);
-			this.PropertyGridSettings.TabIndex = 0;
-			this.PropertyGridSettings.Text = "PropertyGrid";
-			this.PropertyGridSettings.ViewBackColor = System.Drawing.SystemColors.Window;
-			this.PropertyGridSettings.ViewForeColor = System.Drawing.SystemColors.WindowText;
-			// 
-			// FormSettings
-			// 
-			this.AutoScaleBaseSize = new System.Drawing.Size(5, 12);
-			this.ClientSize = new System.Drawing.Size(352, 374);
-			this.Controls.Add(this.PropertyGridSettings);
-			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
-			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-			this.Name = "FormSettings";
-			this.Text = "PSOBBToolsê›íË";
-			this.ResumeLayout(false);
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormSettings));
+            this.PropertyGridSettings = new System.Windows.Forms.PropertyGrid();
+            this.SuspendLayout();
+            // 
+            // PropertyGridSettings
+            // 
+            this.PropertyGridSettings.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.PropertyGridSettings.LineColor = System.Drawing.SystemColors.ScrollBar;
+            this.PropertyGridSettings.Location = new System.Drawing.Point(0, 0);
+            this.PropertyGridSettings.Name = "PropertyGridSettings";
+            this.PropertyGridSettings.Size = new System.Drawing.Size(352, 357);
+            this.PropertyGridSettings.TabIndex = 0;
+            // 
+            // FormSettings
+            // 
+            this.AutoScaleBaseSize = new System.Drawing.Size(5, 12);
+            this.ClientSize = new System.Drawing.Size(352, 357);
+            this.Controls.Add(this.PropertyGridSettings);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Name = "FormSettings";
+            this.Text = "PSOBBToolsê›íË";
+            this.ResumeLayout(false);
 
 		}
 		#endregion

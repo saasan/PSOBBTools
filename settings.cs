@@ -2,6 +2,8 @@ using System;
 using System.ComponentModel;
 using System.Design;
 using System.Runtime.Serialization;
+using System.Drawing;
+using System.Windows.Forms;
 
 namespace PSOBBTools
 {
@@ -21,6 +23,17 @@ namespace PSOBBTools
 		public const string logFolder = "log";
         /// <summary>SSフォルダ名</summary>
 		public const string ssFolder = "bmp";
+        /// <summary> チャットのログファイルの接頭辞</summary>
+        public const string chatFilePrefix = "chat";
+        /// <summary> チャットのログファイルの拡張子</summary>
+        public const string chatFileExtension = ".txt";
+        /// <summary> チームチャットのログファイルの接頭辞</summary>
+        public const string teamChatFilePrefix = "GuildChat";
+        /// <summary> チームチャットのログファイルの拡張子</summary>
+        public const string teamChatFileExtension = ".txt";
+        /// <summary>SSのファイル名</summary>
+        public const string ssFileFilter = "pso*.bmp";
+
         /// <summary>PSOBBのウィンドウクラス名</summary>
         public const string windowClassName = "PHANTASY STAR ONLINE Blue Burst";
 
@@ -38,8 +51,6 @@ namespace PSOBBTools
 
         /// <summary>PSOBBのフォルダ</summary>
 		private string psobbFolder = @"C:\Program Files\SEGA\PHANTASY STAR ONLINE Blue Burst";
-        // チームチャットのログファイル名</summary>
-		private string teamChatFileFilter = "GuildChat*.txt";
 
         /// <summary>チームチャットのチャイムON/OFF</summary>
 		private bool teamChimeEnabled = false;
@@ -51,8 +62,6 @@ namespace PSOBBTools
         /// <summary>チャイム音のファイル</summary>
 		private string chimeFile = "pon.wav";
 
-        /// <summary>SSのファイル名</summary>
-		private string ssFileFilter = "pso*.bmp";
         /// <summary>SSの圧縮形式</summary>
 		private SSFileFormats ssFileFormat = SSFileFormats.jpg;
 
@@ -66,7 +75,23 @@ namespace PSOBBTools
 		private bool magTimerTopMost = false;
 
         /// <summary>マグタイマーウィンドウの位置</summary>
-		private System.Drawing.Point magTimerLocation = new System.Drawing.Point(50, 50);
+		private Point magTimerLocation = new Point(50, 50);
+
+        /// <summary>チャットログウィンドウにチームチャットログを表示</summary>
+        private bool chatLogTeamDisplayed = false;
+
+        /// <summary>チャットログウィンドウの位置</summary>
+        private Point chatLogLocation = new Point(50, 50);
+        /// <summary>チャットログウィンドウのサイズ</summary>
+        private Size chatLogSize = new Size(640, 480);
+        /// <summary>チャットログウィンドウの分割線までの距離</summary>
+        private int chatLogSplitterDistance = 200;
+        /// <summary>チャットログのソート順</summary>
+        private SortOrder chatLogSortOrder = SortOrder.Ascending;
+        /// <summary>チームチャットログのソート順</summary>
+        private SortOrder chatLogTeamSortOrder = SortOrder.Ascending;
+        /// <summary>チャットログの自動スクロール</summary>
+        private bool chatLogAutoScroll = true;
 
         /// <summary>変更イベント</summary>
         public event EventHandler Changed;
@@ -85,7 +110,7 @@ namespace PSOBBTools
         /// 変更イベントを発生させる
         /// </summary>
         /// <param name="e">イベントデータ</param>
-        void OnChanged(EventArgs e)
+        protected virtual void OnChanged(EventArgs e)
         {
             if (Changed != null)
             {
@@ -100,30 +125,21 @@ namespace PSOBBTools
 			PropertyDisplayName("PSOBBのフォルダ"),
 			Description("PSOBBのフォルダ(PsoBB.exe等があるフォルダ)を設定します。"),
 			Editor(typeof(System.Windows.Forms.Design.FolderNameEditor),
-			    typeof(System.Drawing.Design.UITypeEditor))]
+                typeof(System.Drawing.Design.UITypeEditor))]
 		public string PSOBBFolder
 		{
 			get { return psobbFolder; }
 			set
             {
-                psobbFolder = value;
-                OnChanged(EventArgs.Empty);
-            }
-		}
-
-        /// <summary>
-        /// チームチャットのログファイル名
-        /// </summary>
-		[Category("全般"),
-			PropertyDisplayName("ログファイル名(チーム)"),
-			Description("監視対象とするチームチャットのログファイル名を設定します。")]
-		public string TeamChatFileFilter
-		{
-			get { return teamChatFileFilter; }
-			set
-			{
-				teamChatFileFilter = value;
-                OnChanged(EventArgs.Empty);
+                if (!String.IsNullOrEmpty(value) && System.IO.Directory.Exists(value))
+                {
+                    psobbFolder = value;
+                    OnChanged(EventArgs.Empty);
+                }
+                else
+                {
+                    System.Windows.Forms.MessageBox.Show("PSOBBのフォルダが存在しません。", System.Windows.Forms.Application.ProductName, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+                }
             }
 		}
 
@@ -182,7 +198,7 @@ namespace PSOBBTools
 			PropertyDisplayName("チャイム用WAVファイル"),
 			Description("チャイムとして使用するWAVファイルを設定します。"),
 			Editor(typeof(UIFileNameEditor),
-			    typeof(System.Drawing.Design.UITypeEditor)),
+                typeof(System.Drawing.Design.UITypeEditor)),
 			FileDialogFilter("WAVファイル (*.wav)|*.wav")]
 		public string ChimeFile
 		{
@@ -190,22 +206,6 @@ namespace PSOBBTools
 			set
 			{
 				chimeFile = value;
-                OnChanged(EventArgs.Empty);
-            }
-		}
-
-        /// <summary>
-        /// SSのファイル名
-        /// </summary>
-		[Category("SSの自動圧縮"),
-			PropertyDisplayName("SSのファイル名"),
-			Description("監視対象とするスクリーンショットのファイル名を設定します。")]
-		public string SSFileFilter
-		{
-			get { return ssFileFilter; }
-			set
-			{
-				ssFileFilter = value;
                 OnChanged(EventArgs.Empty);
             }
 		}
@@ -233,7 +233,7 @@ namespace PSOBBTools
 		PropertyDisplayName("マグタイマー用WAVファイル"),
 			Description("マグタイマーの音として使用するWAVファイルを設定します。"),
 			Editor(typeof(UIFileNameEditor),
-			    typeof(System.Drawing.Design.UITypeEditor)),
+                typeof(System.Drawing.Design.UITypeEditor)),
 			FileDialogFilter("WAVファイル (*.wav)|*.wav")]
 		public string MagTimerFile
 		{
@@ -304,7 +304,7 @@ namespace PSOBBTools
         /// マグタイマーウィンドウの位置
         /// </summary>
 		[Browsable(false)]
-		public System.Drawing.Point MagTimerLocation
+		public Point MagTimerLocation
 		{
 			get { return magTimerLocation; }
 			set
@@ -313,5 +313,107 @@ namespace PSOBBTools
                 OnChanged(EventArgs.Empty);
             }
 		}
-	}
+
+        /// <summary>
+        /// チャットログウィンドウにチームチャットログを表示
+        /// </summary>
+        [Category("チャットログ"),
+            PropertyDisplayName("チームチャットログを表示"),
+            Description("チャットログウィンドウにチームチャットログを表示するかどうかを設定します。")]
+        public bool ChatLogTeamDisplayed
+        {
+            get { return chatLogTeamDisplayed; }
+            set
+            {
+                chatLogTeamDisplayed = value;
+                OnChanged(EventArgs.Empty);
+            }
+        }
+
+        /// <summary>
+        /// チャットログの自動スクロール
+        /// </summary>
+        [Category("チャットログ"),
+            PropertyDisplayName("チャットログの自動スクロール"),
+            Description("チャットログを自動的にスクロールするかどうかを設定します。")]
+        public bool ChatLogAutoScroll
+        {
+            get { return chatLogAutoScroll; }
+            set
+            {
+                chatLogAutoScroll = value;
+                OnChanged(EventArgs.Empty);
+            }
+        }
+
+        /// <summary>
+        /// チャットログウィンドウの位置
+        /// </summary>
+		[Browsable(false)]
+        public Point ChatLogLocation
+		{
+			get { return chatLogLocation; }
+			set
+			{
+				chatLogLocation = value;
+                OnChanged(EventArgs.Empty);
+            }
+		}
+
+        /// <summary>
+        /// チャットログウィンドウのサイズ
+        /// </summary>
+        [Browsable(false)]
+        public Size ChatLogSize
+        {
+            get { return chatLogSize; }
+            set
+            {
+                chatLogSize = value;
+                OnChanged(EventArgs.Empty);
+            }
+        }
+
+        /// <summary>
+        /// チャットログウィンドウの分割線までの距離
+        /// </summary>
+        [Browsable(false)]
+        public int ChatLogSplitterDistance
+        {
+            get { return chatLogSplitterDistance; }
+            set
+            {
+                chatLogSplitterDistance = value;
+                OnChanged(EventArgs.Empty);
+            }
+        }
+
+        /// <summary>
+        /// チャットログのソート順
+        /// </summary>
+        [Browsable(false)]
+        public SortOrder ChatLogSortOrder
+        {
+            get { return chatLogSortOrder; }
+            set
+            {
+                chatLogSortOrder = value;
+                OnChanged(EventArgs.Empty);
+            }
+        }
+
+        /// <summary>
+        /// チームチャットログのソート順
+        /// </summary>
+        [Browsable(false)]
+        public SortOrder ChatLogTeamSortOrder
+        {
+            get { return chatLogTeamSortOrder; }
+            set
+            {
+                chatLogTeamSortOrder = value;
+                OnChanged(EventArgs.Empty);
+            }
+        }
+    }
 }
