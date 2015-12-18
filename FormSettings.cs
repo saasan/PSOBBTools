@@ -59,13 +59,13 @@ namespace PSOBBTools
             this.PropertyGridSettings.LineColor = System.Drawing.SystemColors.ScrollBar;
             this.PropertyGridSettings.Location = new System.Drawing.Point(0, 0);
             this.PropertyGridSettings.Name = "PropertyGridSettings";
-            this.PropertyGridSettings.Size = new System.Drawing.Size(352, 357);
+            this.PropertyGridSettings.Size = new System.Drawing.Size(392, 354);
             this.PropertyGridSettings.TabIndex = 0;
             // 
             // FormSettings
             // 
             this.AutoScaleBaseSize = new System.Drawing.Size(5, 12);
-            this.ClientSize = new System.Drawing.Size(352, 357);
+            this.ClientSize = new System.Drawing.Size(392, 354);
             this.Controls.Add(this.PropertyGridSettings);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));

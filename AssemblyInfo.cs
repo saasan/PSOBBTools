@@ -11,7 +11,7 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("s2works")]
 [assembly: AssemblyProduct("PSOBBTools")]
-[assembly: AssemblyCopyright("Copyright (C) 2005 s2works.")]
+[assembly: AssemblyCopyright("Copyright (C) 2005-2006 s2works.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]		
 
@@ -26,7 +26,7 @@ using System.Runtime.CompilerServices;
 // 下にあるように、'*' を使って、すべての値を指定するか、
 // ビルドおよびリビジョン番号を既定値にすることができます。
 
-[assembly: AssemblyVersion("2.0.*")]
+[assembly: AssemblyVersion("2.1.*")]
 
 //
 // アセンブリに署名するには、使用するキーを指定しなければなりません。 

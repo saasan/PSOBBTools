@@ -11,7 +11,7 @@ namespace PSOBBTools
 	/// </summary>
 	public class FormMagTimer : System.Windows.Forms.Form
 	{
-		private const string FORM_TEXT = "MagTimer";
+		private readonly string FORM_TEXT;
 		private const string BUTTON_TEXT_START = "スタート(&S)";
 		private const string BUTTON_TEXT_STOP = "ストップ(&S)";
 
@@ -32,6 +32,8 @@ namespace PSOBBTools
 		public FormMagTimer(Settings settings)
 		{
 			InitializeComponent();
+
+            FORM_TEXT = this.Text;
 
             upDownTime.Minimum = Settings.magTimerTimeMin;
             upDownTime.Maximum = Settings.magTimerTimeMax;
@@ -181,7 +183,7 @@ namespace PSOBBTools
             this.MaximizeBox = false;
             this.Name = "FormMagTimer";
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
-            this.Text = "MagTimer";
+            this.Text = "マグタイマー";
             ((System.ComponentModel.ISupportInitialize)(this.upDownTime)).EndInit();
             this.ResumeLayout(false);
 

@@ -33,7 +33,7 @@
             this.buttonCancel = new System.Windows.Forms.Button();
             this.radioSize640 = new System.Windows.Forms.RadioButton();
             this.radioSize1024 = new System.Windows.Forms.RadioButton();
-            this.radioSize = new System.Windows.Forms.RadioButton();
+            this.radioSizeCustom = new System.Windows.Forms.RadioButton();
             this.labelWidth = new System.Windows.Forms.Label();
             this.labelHeight = new System.Windows.Forms.Label();
             this.upDownWidth = new System.Windows.Forms.NumericUpDown();
@@ -85,18 +85,16 @@
             this.radioSize1024.UseVisualStyleBackColor = true;
             this.radioSize1024.CheckedChanged += new System.EventHandler(this.radioSize_CheckedChanged);
             // 
-            // radioSize
+            // radioSizeCustom
             // 
-            this.radioSize.AutoSize = true;
-            this.radioSize.Checked = true;
-            this.radioSize.Location = new System.Drawing.Point(12, 78);
-            this.radioSize.Name = "radioSize";
-            this.radioSize.Size = new System.Drawing.Size(91, 16);
-            this.radioSize.TabIndex = 2;
-            this.radioSize.TabStop = true;
-            this.radioSize.Text = "指定サイズ(&S)";
-            this.radioSize.UseVisualStyleBackColor = true;
-            this.radioSize.CheckedChanged += new System.EventHandler(this.radioSize_CheckedChanged);
+            this.radioSizeCustom.AutoSize = true;
+            this.radioSizeCustom.Location = new System.Drawing.Point(12, 78);
+            this.radioSizeCustom.Name = "radioSizeCustom";
+            this.radioSizeCustom.Size = new System.Drawing.Size(91, 16);
+            this.radioSizeCustom.TabIndex = 2;
+            this.radioSizeCustom.Text = "指定サイズ(&S)";
+            this.radioSizeCustom.UseVisualStyleBackColor = true;
+            this.radioSizeCustom.CheckedChanged += new System.EventHandler(this.radioSize_CheckedChanged);
             // 
             // labelWidth
             // 
@@ -180,7 +178,7 @@
             this.AcceptButton = this.buttonOK;
             this.CancelButton = this.buttonCancel;
             this.ClientSize = new System.Drawing.Size(302, 168);
-            this.Controls.Add(this.radioSize);
+            this.Controls.Add(this.radioSizeCustom);
             this.Controls.Add(this.radioSize800);
             this.Controls.Add(this.radioSize1024);
             this.Controls.Add(this.radioSize640);
@@ -209,7 +207,7 @@
         private System.Windows.Forms.Button buttonCancel;
         private System.Windows.Forms.RadioButton radioSize640;
         private System.Windows.Forms.RadioButton radioSize1024;
-        private System.Windows.Forms.RadioButton radioSize;
+        private System.Windows.Forms.RadioButton radioSizeCustom;
         private System.Windows.Forms.Label labelWidth;
         private System.Windows.Forms.Label labelHeight;
         private System.Windows.Forms.NumericUpDown upDownWidth;

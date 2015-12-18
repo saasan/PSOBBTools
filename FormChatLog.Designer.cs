@@ -18,18 +18,24 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormChatLog));
             this.menuStrip = new System.Windows.Forms.MenuStrip();
-            this.menuItemEdit = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuItemCopyAll = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuItemCopyGuildCardId = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuItemCopyName = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuItemCopyWord = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparatorEdit1 = new System.Windows.Forms.ToolStripSeparator();
-            this.MenuItemEditClear = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparatorEdit2 = new System.Windows.Forms.ToolStripSeparator();
-            this.menuItemSelectAll = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuItemInvertSelection = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuItemView = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuItemViewTeamChat = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuFile = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuFileOpenFolderLog = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuFileSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.menuFileClose = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuEdit = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuEditCopyAll = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuEditCopyGuildCardId = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuEditCopyName = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuEditCopyWord = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuEditSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.menuEditClear = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuEditSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.menuEditSelectAll = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuEditInvertSelection = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuView = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuViewTeamChat = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuViewSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.menuViewAutoScroll = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer = new System.Windows.Forms.SplitContainer();
             this.listViewChatLog = new System.Windows.Forms.ListView();
             this.columnHeaderTime = new System.Windows.Forms.ColumnHeader();
@@ -41,8 +47,6 @@
             this.columnHeaderTeamName = new System.Windows.Forms.ColumnHeader();
             this.columnHeaderTeamWord = new System.Windows.Forms.ColumnHeader();
             this.timerUpdateListView = new System.Windows.Forms.Timer(this.components);
-            this.toolStripSeparatorView1 = new System.Windows.Forms.ToolStripSeparator();
-            this.menuItemAutoScroll = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip.SuspendLayout();
             this.splitContainer.Panel1.SuspendLayout();
             this.splitContainer.Panel2.SuspendLayout();
@@ -52,117 +56,162 @@
             // menuStrip
             // 
             this.menuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.menuItemEdit,
-            this.menuItemView});
+            this.menuFile,
+            this.menuEdit,
+            this.menuView});
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
             this.menuStrip.Size = new System.Drawing.Size(632, 24);
             this.menuStrip.TabIndex = 1;
             this.menuStrip.Text = "menuStrip";
             // 
-            // menuItemEdit
+            // menuFile
             // 
-            this.menuItemEdit.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.menuItemCopyAll,
-            this.menuItemCopyGuildCardId,
-            this.menuItemCopyName,
-            this.menuItemCopyWord,
-            this.toolStripSeparatorEdit1,
-            this.MenuItemEditClear,
-            this.toolStripSeparatorEdit2,
-            this.menuItemSelectAll,
-            this.menuItemInvertSelection});
-            this.menuItemEdit.Name = "menuItemEdit";
-            this.menuItemEdit.Size = new System.Drawing.Size(57, 20);
-            this.menuItemEdit.Text = "編集(&E)";
-            this.menuItemEdit.Click += new System.EventHandler(this.menuItemEdit_Click);
+            this.menuFile.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menuFileOpenFolderLog,
+            this.menuFileSeparator1,
+            this.menuFileClose});
+            this.menuFile.Name = "menuFile";
+            this.menuFile.Size = new System.Drawing.Size(67, 20);
+            this.menuFile.Text = "ファイル(&F)";
             // 
-            // menuItemCopyAll
+            // menuFileOpenFolderLog
             // 
-            this.menuItemCopyAll.Name = "menuItemCopyAll";
-            this.menuItemCopyAll.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.C)));
-            this.menuItemCopyAll.Size = new System.Drawing.Size(229, 22);
-            this.menuItemCopyAll.Text = "すべての項目をコピー(&C)";
-            this.menuItemCopyAll.Click += new System.EventHandler(this.menuItemCopyAll_Click);
+            this.menuFileOpenFolderLog.Name = "menuFileOpenFolderLog";
+            this.menuFileOpenFolderLog.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.L)));
+            this.menuFileOpenFolderLog.Size = new System.Drawing.Size(200, 22);
+            this.menuFileOpenFolderLog.Text = "logフォルダを開く(&L)";
+            this.menuFileOpenFolderLog.Click += new System.EventHandler(this.menuFileOpenFolderLog_Click);
             // 
-            // menuItemCopyGuildCardId
+            // menuFileSeparator1
             // 
-            this.menuItemCopyGuildCardId.Name = "menuItemCopyGuildCardId";
-            this.menuItemCopyGuildCardId.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.I)));
-            this.menuItemCopyGuildCardId.Size = new System.Drawing.Size(229, 22);
-            this.menuItemCopyGuildCardId.Text = "ギルドカードIDをコピー(&G)";
-            this.menuItemCopyGuildCardId.Click += new System.EventHandler(this.menuItemCopyGuildCardId_Click);
+            this.menuFileSeparator1.Name = "menuFileSeparator1";
+            this.menuFileSeparator1.Size = new System.Drawing.Size(197, 6);
             // 
-            // menuItemCopyName
+            // menuFileClose
             // 
-            this.menuItemCopyName.Name = "menuItemCopyName";
-            this.menuItemCopyName.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.N)));
-            this.menuItemCopyName.Size = new System.Drawing.Size(229, 22);
-            this.menuItemCopyName.Text = "名前をコピー(&N)";
-            this.menuItemCopyName.Click += new System.EventHandler(this.menuItemCopyName_Click);
+            this.menuFileClose.Name = "menuFileClose";
+            this.menuFileClose.Size = new System.Drawing.Size(200, 22);
+            this.menuFileClose.Text = "閉じる(&C)";
+            this.menuFileClose.Click += new System.EventHandler(this.menuFileClose_Click);
             // 
-            // menuItemCopyWord
+            // menuEdit
             // 
-            this.menuItemCopyWord.Name = "menuItemCopyWord";
-            this.menuItemCopyWord.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.W)));
-            this.menuItemCopyWord.Size = new System.Drawing.Size(229, 22);
-            this.menuItemCopyWord.Text = "発言をコピー(&W)";
-            this.menuItemCopyWord.Click += new System.EventHandler(this.menuItemCopyWord_Click);
+            this.menuEdit.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menuEditCopyAll,
+            this.menuEditCopyGuildCardId,
+            this.menuEditCopyName,
+            this.menuEditCopyWord,
+            this.menuEditSeparator1,
+            this.menuEditClear,
+            this.menuEditSeparator2,
+            this.menuEditSelectAll,
+            this.menuEditInvertSelection});
+            this.menuEdit.Name = "menuEdit";
+            this.menuEdit.Size = new System.Drawing.Size(57, 20);
+            this.menuEdit.Text = "編集(&E)";
+            this.menuEdit.DropDownOpened += new System.EventHandler(this.menuEdit_DropDownOpened);
             // 
-            // toolStripSeparatorEdit1
+            // menuEditCopyAll
             // 
-            this.toolStripSeparatorEdit1.Name = "toolStripSeparatorEdit1";
-            this.toolStripSeparatorEdit1.Size = new System.Drawing.Size(226, 6);
+            this.menuEditCopyAll.Name = "menuEditCopyAll";
+            this.menuEditCopyAll.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.C)));
+            this.menuEditCopyAll.Size = new System.Drawing.Size(229, 22);
+            this.menuEditCopyAll.Text = "すべての項目をコピー(&C)";
+            this.menuEditCopyAll.Click += new System.EventHandler(this.menuEditCopyAll_Click);
             // 
-            // MenuItemEditClear
+            // menuEditCopyGuildCardId
             // 
-            this.MenuItemEditClear.Name = "MenuItemEditClear";
-            this.MenuItemEditClear.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift)
+            this.menuEditCopyGuildCardId.Name = "menuEditCopyGuildCardId";
+            this.menuEditCopyGuildCardId.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.I)));
+            this.menuEditCopyGuildCardId.Size = new System.Drawing.Size(229, 22);
+            this.menuEditCopyGuildCardId.Text = "ギルドカードIDをコピー(&G)";
+            this.menuEditCopyGuildCardId.Click += new System.EventHandler(this.menuEditCopyGuildCardId_Click);
+            // 
+            // menuEditCopyName
+            // 
+            this.menuEditCopyName.Name = "menuEditCopyName";
+            this.menuEditCopyName.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.N)));
+            this.menuEditCopyName.Size = new System.Drawing.Size(229, 22);
+            this.menuEditCopyName.Text = "名前をコピー(&N)";
+            this.menuEditCopyName.Click += new System.EventHandler(this.menuEditCopyName_Click);
+            // 
+            // menuEditCopyWord
+            // 
+            this.menuEditCopyWord.Name = "menuEditCopyWord";
+            this.menuEditCopyWord.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.W)));
+            this.menuEditCopyWord.Size = new System.Drawing.Size(229, 22);
+            this.menuEditCopyWord.Text = "発言をコピー(&W)";
+            this.menuEditCopyWord.Click += new System.EventHandler(this.menuEditCopyWord_Click);
+            // 
+            // menuEditSeparator1
+            // 
+            this.menuEditSeparator1.Name = "menuEditSeparator1";
+            this.menuEditSeparator1.Size = new System.Drawing.Size(226, 6);
+            // 
+            // menuEditClear
+            // 
+            this.menuEditClear.Name = "menuEditClear";
+            this.menuEditClear.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift)
                         | System.Windows.Forms.Keys.C)));
-            this.MenuItemEditClear.Size = new System.Drawing.Size(229, 22);
-            this.MenuItemEditClear.Text = "クリア(&L)";
-            this.MenuItemEditClear.Click += new System.EventHandler(this.MenuItemEditClear_Click);
+            this.menuEditClear.Size = new System.Drawing.Size(229, 22);
+            this.menuEditClear.Text = "クリア(&L)";
+            this.menuEditClear.Click += new System.EventHandler(this.menuEditClear_Click);
             // 
-            // toolStripSeparatorEdit2
+            // menuEditSeparator2
             // 
-            this.toolStripSeparatorEdit2.Name = "toolStripSeparatorEdit2";
-            this.toolStripSeparatorEdit2.Size = new System.Drawing.Size(226, 6);
+            this.menuEditSeparator2.Name = "menuEditSeparator2";
+            this.menuEditSeparator2.Size = new System.Drawing.Size(226, 6);
             // 
-            // menuItemSelectAll
+            // menuEditSelectAll
             // 
-            this.menuItemSelectAll.Name = "menuItemSelectAll";
-            this.menuItemSelectAll.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.A)));
-            this.menuItemSelectAll.Size = new System.Drawing.Size(229, 22);
-            this.menuItemSelectAll.Text = "すべて選択(&A)";
-            this.menuItemSelectAll.Click += new System.EventHandler(this.menuItemSelectAll_Click);
+            this.menuEditSelectAll.Name = "menuEditSelectAll";
+            this.menuEditSelectAll.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.A)));
+            this.menuEditSelectAll.Size = new System.Drawing.Size(229, 22);
+            this.menuEditSelectAll.Text = "すべて選択(&A)";
+            this.menuEditSelectAll.Click += new System.EventHandler(this.menuEditSelectAll_Click);
             // 
-            // menuItemInvertSelection
+            // menuEditInvertSelection
             // 
-            this.menuItemInvertSelection.Name = "menuItemInvertSelection";
-            this.menuItemInvertSelection.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift)
+            this.menuEditInvertSelection.Name = "menuEditInvertSelection";
+            this.menuEditInvertSelection.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift)
                         | System.Windows.Forms.Keys.I)));
-            this.menuItemInvertSelection.Size = new System.Drawing.Size(229, 22);
-            this.menuItemInvertSelection.Text = "選択の切り替え(&I)";
-            this.menuItemInvertSelection.Click += new System.EventHandler(this.menuItemInvertSelection_Click);
+            this.menuEditInvertSelection.Size = new System.Drawing.Size(229, 22);
+            this.menuEditInvertSelection.Text = "選択の切り替え(&I)";
+            this.menuEditInvertSelection.Click += new System.EventHandler(this.menuEditInvertSelection_Click);
             // 
-            // menuItemView
+            // menuView
             // 
-            this.menuItemView.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.menuItemViewTeamChat,
-            this.toolStripSeparatorView1,
-            this.menuItemAutoScroll});
-            this.menuItemView.Name = "menuItemView";
-            this.menuItemView.Size = new System.Drawing.Size(57, 20);
-            this.menuItemView.Text = "表示(&V)";
-            this.menuItemView.DropDownOpened += new System.EventHandler(this.menuItemView_DropDownOpened);
+            this.menuView.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menuViewTeamChat,
+            this.menuViewSeparator1,
+            this.menuViewAutoScroll});
+            this.menuView.Name = "menuView";
+            this.menuView.Size = new System.Drawing.Size(57, 20);
+            this.menuView.Text = "表示(&V)";
+            this.menuView.DropDownOpened += new System.EventHandler(this.menuView_DropDownOpened);
             // 
-            // menuItemViewTeamChat
+            // menuViewTeamChat
             // 
-            this.menuItemViewTeamChat.Name = "menuItemViewTeamChat";
-            this.menuItemViewTeamChat.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.G)));
-            this.menuItemViewTeamChat.Size = new System.Drawing.Size(228, 22);
-            this.menuItemViewTeamChat.Text = "チームチャット(&T)";
-            this.menuItemViewTeamChat.Click += new System.EventHandler(this.menuItemViewTeamChat_Click);
+            this.menuViewTeamChat.Name = "menuViewTeamChat";
+            this.menuViewTeamChat.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.G)));
+            this.menuViewTeamChat.Size = new System.Drawing.Size(228, 22);
+            this.menuViewTeamChat.Text = "チームチャット(&T)";
+            this.menuViewTeamChat.Click += new System.EventHandler(this.menuViewTeamChat_Click);
+            // 
+            // menuViewSeparator1
+            // 
+            this.menuViewSeparator1.Name = "menuViewSeparator1";
+            this.menuViewSeparator1.Size = new System.Drawing.Size(225, 6);
+            // 
+            // menuViewAutoScroll
+            // 
+            this.menuViewAutoScroll.Name = "menuViewAutoScroll";
+            this.menuViewAutoScroll.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift)
+                        | System.Windows.Forms.Keys.A)));
+            this.menuViewAutoScroll.Size = new System.Drawing.Size(228, 22);
+            this.menuViewAutoScroll.Text = "自動スクロール(&A)";
+            this.menuViewAutoScroll.Click += new System.EventHandler(this.menuViewAutoScroll_Click);
             // 
             // splitContainer
             // 
@@ -259,20 +308,6 @@
             this.timerUpdateListView.Interval = 500;
             this.timerUpdateListView.Tick += new System.EventHandler(this.timerUpdateListView_Tick);
             // 
-            // toolStripSeparatorView1
-            // 
-            this.toolStripSeparatorView1.Name = "toolStripSeparatorView1";
-            this.toolStripSeparatorView1.Size = new System.Drawing.Size(225, 6);
-            // 
-            // menuItemAutoScroll
-            // 
-            this.menuItemAutoScroll.Name = "menuItemAutoScroll";
-            this.menuItemAutoScroll.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift)
-                        | System.Windows.Forms.Keys.A)));
-            this.menuItemAutoScroll.Size = new System.Drawing.Size(228, 22);
-            this.menuItemAutoScroll.Text = "自動スクロール(&A)";
-            this.menuItemAutoScroll.Click += new System.EventHandler(this.menuItemAutoScroll_Click);
-            // 
             // FormChatLog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -298,12 +333,12 @@
         #endregion
 
         private System.Windows.Forms.MenuStrip menuStrip;
-        private System.Windows.Forms.ToolStripMenuItem menuItemEdit;
-        private System.Windows.Forms.ToolStripMenuItem menuItemCopyAll;
-        private System.Windows.Forms.ToolStripMenuItem menuItemCopyGuildCardId;
-        private System.Windows.Forms.ToolStripMenuItem menuItemCopyWord;
-        private System.Windows.Forms.ToolStripMenuItem menuItemView;
-        private System.Windows.Forms.ToolStripMenuItem menuItemViewTeamChat;
+        private System.Windows.Forms.ToolStripMenuItem menuEdit;
+        private System.Windows.Forms.ToolStripMenuItem menuEditCopyAll;
+        private System.Windows.Forms.ToolStripMenuItem menuEditCopyGuildCardId;
+        private System.Windows.Forms.ToolStripMenuItem menuEditCopyWord;
+        private System.Windows.Forms.ToolStripMenuItem menuView;
+        private System.Windows.Forms.ToolStripMenuItem menuViewTeamChat;
         private System.Windows.Forms.SplitContainer splitContainer;
         private System.Windows.Forms.ListView listViewChatLog;
         private System.Windows.Forms.ColumnHeader columnHeaderTime;
@@ -314,14 +349,18 @@
         private System.Windows.Forms.ColumnHeader columnHeaderTeamTime;
         private System.Windows.Forms.ColumnHeader columnHeaderTeamWord;
         private System.Windows.Forms.ColumnHeader columnHeaderTeamName;
-        private System.Windows.Forms.ToolStripMenuItem menuItemCopyName;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparatorEdit1;
-        private System.Windows.Forms.ToolStripMenuItem menuItemSelectAll;
-        private System.Windows.Forms.ToolStripMenuItem menuItemInvertSelection;
-        private System.Windows.Forms.ToolStripMenuItem MenuItemEditClear;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparatorEdit2;
+        private System.Windows.Forms.ToolStripMenuItem menuEditCopyName;
+        private System.Windows.Forms.ToolStripSeparator menuEditSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem menuEditSelectAll;
+        private System.Windows.Forms.ToolStripMenuItem menuEditInvertSelection;
+        private System.Windows.Forms.ToolStripMenuItem menuEditClear;
+        private System.Windows.Forms.ToolStripSeparator menuEditSeparator2;
         private System.Windows.Forms.Timer timerUpdateListView;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparatorView1;
-        private System.Windows.Forms.ToolStripMenuItem menuItemAutoScroll;
+        private System.Windows.Forms.ToolStripSeparator menuViewSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem menuViewAutoScroll;
+        private System.Windows.Forms.ToolStripMenuItem menuFile;
+        private System.Windows.Forms.ToolStripMenuItem menuFileOpenFolderLog;
+        private System.Windows.Forms.ToolStripSeparator menuFileSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem menuFileClose;
     }
 }

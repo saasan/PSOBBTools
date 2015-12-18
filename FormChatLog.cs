@@ -91,17 +91,33 @@ namespace PSOBBTools
         }
 
         /// <summary>
+        /// logフォルダを開く
+        /// </summary>
+        private void menuFileOpenFolderLog_Click(object sender, EventArgs e)
+        {
+            OpenFolder(settings.PSOBBFolder + '\\' + Settings.logFolder);
+        }
+
+        /// <summary>
+        /// 閉じる
+        /// </summary>
+        private void menuFileClose_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        /// <summary>
         /// 編集メニューのドロップダウンイベント
         /// </summary>
-        private void menuItemEdit_Click(object sender, EventArgs e)
+        private void menuEdit_DropDownOpened(object sender, EventArgs e)
         {
-            menuItemCopyGuildCardId.Enabled = splitContainer.ActiveControl.Equals(listViewChatLog);
+            menuEditCopyGuildCardId.Enabled = splitContainer.ActiveControl.Equals(listViewChatLog);
         }
 
         /// <summary>
         /// すべての項目をコピー
         /// </summary>
-        private void menuItemCopyAll_Click(object sender, EventArgs e)
+        private void menuEditCopyAll_Click(object sender, EventArgs e)
         {
             if (splitContainer.ActiveControl is ListView)
             {
@@ -137,7 +153,7 @@ namespace PSOBBTools
         /// <summary>
         /// ギルドカードIDをコピー
         /// </summary>
-        private void menuItemCopyGuildCardId_Click(object sender, EventArgs e)
+        private void menuEditCopyGuildCardId_Click(object sender, EventArgs e)
         {
             if (splitContainer.ActiveControl.Equals(listViewChatLog))
             {
@@ -150,7 +166,7 @@ namespace PSOBBTools
         /// <summary>
         /// 名前をコピー
         /// </summary>
-        private void menuItemCopyName_Click(object sender, EventArgs e)
+        private void menuEditCopyName_Click(object sender, EventArgs e)
         {
             if (splitContainer.ActiveControl is ListView)
             {
@@ -174,7 +190,7 @@ namespace PSOBBTools
         /// <summary>
         /// 発言をコピー
         /// </summary>
-        private void menuItemCopyWord_Click(object sender, EventArgs e)
+        private void menuEditCopyWord_Click(object sender, EventArgs e)
         {
             if (splitContainer.ActiveControl is ListView)
             {
@@ -221,7 +237,7 @@ namespace PSOBBTools
         /// <summary>
         /// 選択の切り替え
         /// </summary>
-        private void menuItemInvertSelection_Click(object sender, EventArgs e)
+        private void menuEditInvertSelection_Click(object sender, EventArgs e)
         {
             if (splitContainer.ActiveControl is ListView)
             {
@@ -241,7 +257,7 @@ namespace PSOBBTools
         /// <summary>
         /// すべて選択
         /// </summary>
-        private void menuItemSelectAll_Click(object sender, EventArgs e)
+        private void menuEditSelectAll_Click(object sender, EventArgs e)
         {
             if (splitContainer.ActiveControl is ListView)
             {
@@ -261,7 +277,7 @@ namespace PSOBBTools
         /// <summary>
         /// クリア
         /// </summary>
-        private void MenuItemEditClear_Click(object sender, EventArgs e)
+        private void menuEditClear_Click(object sender, EventArgs e)
         {
             if (splitContainer.ActiveControl is ListView)
             {
@@ -278,24 +294,24 @@ namespace PSOBBTools
         /// <summary>
         /// 表示メニューのドロップダウンイベント
         /// </summary>
-        private void menuItemView_DropDownOpened(object sender, EventArgs e)
+        private void menuView_DropDownOpened(object sender, EventArgs e)
         {
-            menuItemViewTeamChat.Checked = settings.ChatLogTeamDisplayed;
-            menuItemAutoScroll.Checked = settings.ChatLogAutoScroll;
+            menuViewTeamChat.Checked = settings.ChatLogTeamVisible;
+            menuViewAutoScroll.Checked = settings.ChatLogAutoScroll;
         }
 
         /// <summary>
         /// チームチャットを表示
         /// </summary>
-        private void menuItemViewTeamChat_Click(object sender, EventArgs e)
+        private void menuViewTeamChat_Click(object sender, EventArgs e)
         {
-            settings.ChatLogTeamDisplayed = !settings.ChatLogTeamDisplayed;
+            settings.ChatLogTeamVisible = !settings.ChatLogTeamVisible;
         }
 
         /// <summary>
         /// 自動スクロール
         /// </summary>
-        private void menuItemAutoScroll_Click(object sender, EventArgs e)
+        private void menuViewAutoScroll_Click(object sender, EventArgs e)
         {
             settings.ChatLogAutoScroll = !settings.ChatLogAutoScroll;
         }
@@ -487,7 +503,7 @@ namespace PSOBBTools
         /// </summary>
         private void ApplySettings()
         {
-            splitContainer.Panel2Collapsed = !settings.ChatLogTeamDisplayed;
+            splitContainer.Panel2Collapsed = !settings.ChatLogTeamVisible;
 
             // 一旦監視を停止
             bool logTailEnable = logTail.EnableRaisingEvents;
@@ -533,6 +549,14 @@ namespace PSOBBTools
         {
             AddListViewItems(listViewChatLog, logItems);
             AddListViewItems(listViewTeamChatLog, teamLogItems);
+        }
+
+        /// <summary>
+        /// フォルダを開く
+        /// </summary>
+        private void OpenFolder(string path)
+        {
+            System.Diagnostics.Process.Start("explorer.exe", "/n," + path);
         }
     }
 }

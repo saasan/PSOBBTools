@@ -19,10 +19,10 @@ namespace PSOBBTools
         public static readonly string settingsFolder;
         /// <summary>旧設定ファイル名</summary>
         public const string oldSettingsFile = "PSOBBTools.xml";
-        /// <summary>ログフォルダ名</summary>
+        /// <summary>logフォルダ名</summary>
 		public const string logFolder = "log";
-        /// <summary>SSフォルダ名</summary>
-		public const string ssFolder = "bmp";
+        /// <summary>bmpフォルダ名</summary>
+		public const string bmpFolder = "bmp";
         /// <summary> チャットのログファイルの接頭辞</summary>
         public const string chatFilePrefix = "chat";
         /// <summary> チャットのログファイルの拡張子</summary>
@@ -42,12 +42,21 @@ namespace PSOBBTools
         /// <summary>マグタイマーの時間の最大値</summary>
         public const decimal magTimerTimeMax = 600;
 
-        /// <summary>SSファイルの形式</summary>
-		public enum SSFileFormats
+        /// <summary>圧縮形式</summary>
+		public enum CompressionFormats
 		{
 			png,
 			jpg
 		}
+
+        /// <summary>ウィンドウサイズのタイプ</summary>
+        public enum WindowSizeTypes
+        {
+            w640h480,
+            w800h600,
+            w1024h768,
+            custom
+        }
 
         /// <summary>PSOBBのフォルダ</summary>
 		private string psobbFolder = @"C:\Program Files\SEGA\PHANTASY STAR ONLINE Blue Burst";
@@ -63,7 +72,7 @@ namespace PSOBBTools
 		private string chimeFile = "pon.wav";
 
         /// <summary>SSの圧縮形式</summary>
-		private SSFileFormats ssFileFormat = SSFileFormats.jpg;
+		private CompressionFormats ssFileFormat = CompressionFormats.jpg;
 
         /// <summary>マグタイマー音のファイル</summary>
 		private string magTimerFile = "popin.wav";
@@ -74,12 +83,16 @@ namespace PSOBBTools
         /// <summary>マグタイマーを常に手前に表示</summary>
 		private bool magTimerTopMost = false;
 
+        /// <summary>マグタイマーウィンドウを表示</summary>
+        private bool magTimerVisible = false;
         /// <summary>マグタイマーウィンドウの位置</summary>
 		private Point magTimerLocation = new Point(50, 50);
 
         /// <summary>チャットログウィンドウにチームチャットログを表示</summary>
-        private bool chatLogTeamDisplayed = false;
+        private bool chatLogTeamVisible = true;
 
+        /// <summary>チャットログウィンドウを表示</summary>
+        private bool chatLogVisible = false;
         /// <summary>チャットログウィンドウの位置</summary>
         private Point chatLogLocation = new Point(50, 50);
         /// <summary>チャットログウィンドウのサイズ</summary>
@@ -92,6 +105,13 @@ namespace PSOBBTools
         private SortOrder chatLogTeamSortOrder = SortOrder.Ascending;
         /// <summary>チャットログの自動スクロール</summary>
         private bool chatLogAutoScroll = true;
+
+        /// <summary>ウィンドウサイズのタイプ</summary>
+        private WindowSizeTypes windowResizeType = WindowSizeTypes.custom;
+        /// <summary>ウィンドウサイズの変更の幅</summary>
+        private decimal windowResizeWidth = 640;
+        /// <summary>ウィンドウサイズの変更の高さ</summary>
+        private decimal windowResizeHeight = 480;
 
         /// <summary>変更イベント</summary>
         public event EventHandler Changed;
@@ -123,7 +143,7 @@ namespace PSOBBTools
         /// </summary>
 		[Category("全般"),
 			PropertyDisplayName("PSOBBのフォルダ"),
-			Description("PSOBBのフォルダ(PsoBB.exe等があるフォルダ)を設定します。"),
+			Description("PSOBBのフォルダ(PsoBB.exe等があるフォルダ)を設定します。PSOBBのインストール先を変更している場合はこの値を変更してください。"),
 			Editor(typeof(System.Windows.Forms.Design.FolderNameEditor),
                 typeof(System.Drawing.Design.UITypeEditor))]
 		public string PSOBBFolder
@@ -148,7 +168,7 @@ namespace PSOBBTools
         /// </summary>
 		[Category("全般"),
 			PropertyDisplayName("チームチャットのチャイム"),
-            Description("チームチャットのチャイムを使用するかどうかを設定します。")]
+            Description("チームチャットのチャイムを鳴らすかどうかを設定します。(True=鳴らす、False=鳴らさない)")]
 		public bool TeamChimeEnabled
 		{
 			get { return teamChimeEnabled; }
@@ -164,7 +184,7 @@ namespace PSOBBTools
         /// </summary>
 		[Category("全般"),
 			PropertyDisplayName("SSの自動圧縮"),
-            Description("スクリーンショットを自動圧縮するかどうかを設定します。")]
+            Description("スクリーンショットを自動圧縮するかどうかを設定します。(True=する、False=しない)")]
 		public bool SSCompressionEnabled
 		{
 			get { return ssCompressionEnabled; }
@@ -180,7 +200,7 @@ namespace PSOBBTools
         /// </summary>
 		[Category("全般"),
 			PropertyDisplayName("システムボタンの表示"),
-            Description("システムボタンを表示するかどうかを設定します。")]
+            Description("システムボタンを表示するかどうかを設定します。(True=する、False=しない)")]
 		public bool SystemButtonsEnabled
 		{
 			get { return systemButtonsEnabled; }
@@ -216,7 +236,7 @@ namespace PSOBBTools
 		[Category("SSの自動圧縮"),
 			PropertyDisplayName("SSの圧縮形式"),
 			Description("スクリーンショットの圧縮形式を設定します。")]
-		public SSFileFormats SSFileFormat
+		public CompressionFormats SSFileFormat
 		{
 			get { return ssFileFormat; }
 			set
@@ -273,7 +293,7 @@ namespace PSOBBTools
         /// </summary>
 		[Category("マグタイマー"),
 			PropertyDisplayName("マグタイマーの繰り返し"),
-			Description("マグタイマーの繰り返しを設定します。")]
+            Description("マグタイマーの繰り返しを設定します。(True=繰り返す、False=繰り返さない)")]
 		public bool MagTimerReload
 		{
 			get { return magTimerReload; }
@@ -289,7 +309,7 @@ namespace PSOBBTools
         /// </summary>
         [Category("マグタイマー"),
             PropertyDisplayName("マグタイマーを常に手前に表示"),
-            Description("マグタイマーを常に手前に表示するかどうかを設定します。")]
+            Description("マグタイマーを常に手前に表示するかどうかを設定します。(True=する、False=しない)")]
         public bool MagTimerTopMost
         {
             get { return magTimerTopMost; }
@@ -301,17 +321,23 @@ namespace PSOBBTools
         }
 
         /// <summary>
+        /// マグタイマーウィンドウを表示
+        /// </summary>
+		[Browsable(false)]
+        public bool MagTimerVisible
+		{
+            get { return magTimerVisible; }
+            set { magTimerVisible = value; }
+		}
+
+        /// <summary>
         /// マグタイマーウィンドウの位置
         /// </summary>
 		[Browsable(false)]
 		public Point MagTimerLocation
 		{
 			get { return magTimerLocation; }
-			set
-			{
-				magTimerLocation = value;
-                OnChanged(EventArgs.Empty);
-            }
+			set { magTimerLocation = value; }
 		}
 
         /// <summary>
@@ -319,13 +345,13 @@ namespace PSOBBTools
         /// </summary>
         [Category("チャットログ"),
             PropertyDisplayName("チームチャットログを表示"),
-            Description("チャットログウィンドウにチームチャットログを表示するかどうかを設定します。")]
-        public bool ChatLogTeamDisplayed
+            Description("チャットログウィンドウにチームチャットログを表示するかどうかを設定します。(True=する、False=しない)")]
+        public bool ChatLogTeamVisible
         {
-            get { return chatLogTeamDisplayed; }
+            get { return chatLogTeamVisible; }
             set
             {
-                chatLogTeamDisplayed = value;
+                chatLogTeamVisible = value;
                 OnChanged(EventArgs.Empty);
             }
         }
@@ -335,7 +361,7 @@ namespace PSOBBTools
         /// </summary>
         [Category("チャットログ"),
             PropertyDisplayName("チャットログの自動スクロール"),
-            Description("チャットログを自動的にスクロールするかどうかを設定します。")]
+            Description("チャットログを自動的にスクロールするかどうかを設定します。(True=する、False=しない)")]
         public bool ChatLogAutoScroll
         {
             get { return chatLogAutoScroll; }
@@ -347,17 +373,23 @@ namespace PSOBBTools
         }
 
         /// <summary>
+        /// チャットログウィンドウを表示
+        /// </summary>
+        [Browsable(false)]
+        public bool ChatLogVisible
+        {
+            get { return chatLogVisible; }
+            set { chatLogVisible = value; }
+        }
+
+        /// <summary>
         /// チャットログウィンドウの位置
         /// </summary>
 		[Browsable(false)]
         public Point ChatLogLocation
 		{
 			get { return chatLogLocation; }
-			set
-			{
-				chatLogLocation = value;
-                OnChanged(EventArgs.Empty);
-            }
+			set { chatLogLocation = value; }
 		}
 
         /// <summary>
@@ -367,11 +399,7 @@ namespace PSOBBTools
         public Size ChatLogSize
         {
             get { return chatLogSize; }
-            set
-            {
-                chatLogSize = value;
-                OnChanged(EventArgs.Empty);
-            }
+            set { chatLogSize = value; }
         }
 
         /// <summary>
@@ -381,11 +409,7 @@ namespace PSOBBTools
         public int ChatLogSplitterDistance
         {
             get { return chatLogSplitterDistance; }
-            set
-            {
-                chatLogSplitterDistance = value;
-                OnChanged(EventArgs.Empty);
-            }
+            set { chatLogSplitterDistance = value; }
         }
 
         /// <summary>
@@ -395,11 +419,7 @@ namespace PSOBBTools
         public SortOrder ChatLogSortOrder
         {
             get { return chatLogSortOrder; }
-            set
-            {
-                chatLogSortOrder = value;
-                OnChanged(EventArgs.Empty);
-            }
+            set { chatLogSortOrder = value; }
         }
 
         /// <summary>
@@ -409,11 +429,37 @@ namespace PSOBBTools
         public SortOrder ChatLogTeamSortOrder
         {
             get { return chatLogTeamSortOrder; }
-            set
-            {
-                chatLogTeamSortOrder = value;
-                OnChanged(EventArgs.Empty);
-            }
+            set { chatLogTeamSortOrder = value; }
+        }
+
+        /// <summary>
+        /// ウィンドウサイズのタイプ
+        /// </summary>
+        [Browsable(false)]
+        public WindowSizeTypes WindowResizeType
+        {
+            get { return windowResizeType; }
+            set { windowResizeType = value; }
+        }
+
+        /// <summary>
+        /// ウィンドウサイズの変更の幅
+        /// </summary>
+        [Browsable(false)]
+        public decimal WindowResizeWidth
+        {
+            get { return windowResizeWidth; }
+            set { windowResizeWidth = value; }
+        }
+
+        /// <summary>
+        /// ウィンドウサイズの変更の高さ
+        /// </summary>
+        [Browsable(false)]
+        public decimal WindowResizeHeight
+        {
+            get { return windowResizeHeight; }
+            set { windowResizeHeight = value; }
         }
     }
 }

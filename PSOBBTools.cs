@@ -68,8 +68,11 @@ namespace PSOBBTools
 		private MenuItem menuSSCompression = new MenuItem();
 		private MenuItem menuSystemButtons = new MenuItem();
 		private MenuItem menuLine2 = new MenuItem();
-		private MenuItem menuSetting = new MenuItem();
+		private MenuItem menuOpenFolderLog = new MenuItem();
+		private MenuItem menuOpenFolderBmp = new MenuItem();
 		private MenuItem menuLine3 = new MenuItem();
+		private MenuItem menuSetting = new MenuItem();
+		private MenuItem menuLine4 = new MenuItem();
 		private MenuItem menuExit = new MenuItem();
 		private ContextMenu contextMenu = new ContextMenu();
 		// タスクトレイのアイコン
@@ -113,20 +116,22 @@ namespace PSOBBTools
 
             // イベントハンドラを追加
             settings.Changed += new EventHandler(settings_Changed);
+
+            // チャットログを表示
+            if (settings.ChatLogVisible)
+            {
+                ShowChatLog();
+            }
+
+            // マグタイマーを表示
+            if (settings.MagTimerVisible)
+            {
+                ShowMagTimer();
+            }
 		}
 
         public void Dispose()
         {
-            // 各フォームを閉じる
-            if (formMagTimer != null && !formMagTimer.IsDisposed)
-            {
-                formMagTimer.Dispose();
-            }
-            if (formChatLog != null && !formChatLog.IsDisposed)
-            {
-                formChatLog.Dispose();
-            }
-
             // イベントハンドラを削除
             settings.Changed -= new EventHandler(settings_Changed);
 
@@ -208,12 +213,23 @@ namespace PSOBBTools
 			menuLine2.Text = "-";
 			contextMenu.MenuItems.Add(menuLine2);
 
+            menuOpenFolderLog.Text = "logフォルダを開く(&L)";
+			menuOpenFolderLog.Click += new EventHandler(this.menuOpenFolderLog_Click);
+			contextMenu.MenuItems.Add(menuOpenFolderLog);
+
+            menuOpenFolderBmp.Text = "bmpフォルダを開く(&P)";
+			menuOpenFolderBmp.Click += new EventHandler(this.menuOpenFolderBmp_Click);
+			contextMenu.MenuItems.Add(menuOpenFolderBmp);
+
+			menuLine3.Text = "-";
+			contextMenu.MenuItems.Add(menuLine3);
+
 			menuSetting.Text = "設定(&S)";
 			menuSetting.Click += new EventHandler(this.menuSetting_Click);
 			contextMenu.MenuItems.Add(menuSetting);
 
-			menuLine3.Text = "-";
-			contextMenu.MenuItems.Add(menuLine3);
+			menuLine4.Text = "-";
+			contextMenu.MenuItems.Add(menuLine4);
 
 			menuExit.Text = "終了(&X)";
 			menuExit.Click += new EventHandler(this.menuExit_Click);
@@ -250,56 +266,122 @@ namespace PSOBBTools
 			bmpWatcher.Created += new FileSystemEventHandler(BmpFile_Created);
 		}
 
-		private void notifyIcon_DoubleClick(object sender, System.EventArgs e)
+        /// <summary>
+        /// アイコンのダブルクリック
+        /// </summary>
+        private void notifyIcon_DoubleClick(object sender, System.EventArgs e)
 		{
             ShowChatLog();
 		}
 
-		private void contextMenu_Popup(object sender, System.EventArgs e)
+        /// <summary>
+        /// コンテキストメニューのポップアップ
+        /// </summary>
+        private void contextMenu_Popup(object sender, System.EventArgs e)
 		{
 			menuTeamChime.Checked = settings.TeamChimeEnabled;
 			menuSSCompression.Checked = settings.SSCompressionEnabled;
 			menuSystemButtons.Checked = settings.SystemButtonsEnabled;
 		}
 
-		private void menuTeamChime_Click(object sender, System.EventArgs e)
+        /// <summary>
+        /// チャットログ
+        /// </summary>
+        private void menuChatLog_Click(object sender, System.EventArgs e)
+        {
+            ShowChatLog();
+        }
+
+        /// <summary>
+        /// マグタイマー
+        /// </summary>
+        private void menuMagTimer_Click(object sender, System.EventArgs e)
+        {
+            ShowMagTimer();
+        }
+
+        /// <summary>
+        /// ウィンドウサイズの変更
+        /// </summary>
+        private void menuWindowResize_Click(object sender, System.EventArgs e)
+        {
+            ShowWindowResize();
+        }
+
+        /// <summary>
+        /// チームチャットのチャイム
+        /// </summary>
+        private void menuTeamChime_Click(object sender, System.EventArgs e)
 		{
 			settings.TeamChimeEnabled = !settings.TeamChimeEnabled;
 		}
 
-		private void menuSSCompression_Click(object sender, System.EventArgs e)
+        /// <summary>
+        /// SSの自動圧縮
+        /// </summary>
+        private void menuSSCompression_Click(object sender, System.EventArgs e)
 		{
 			settings.SSCompressionEnabled = !settings.SSCompressionEnabled;
 		}
 
-		private void menuSystemButtons_Click(object sender, System.EventArgs e)
+        /// <summary>
+        /// システムボタンの表示
+        /// </summary>
+        private void menuSystemButtons_Click(object sender, System.EventArgs e)
 		{
 			settings.SystemButtonsEnabled = !settings.SystemButtonsEnabled;
 		}
 
+        /// <summary>
+        /// logフォルダを開く
+        /// </summary>
+        private void menuOpenFolderLog_Click(object sender, System.EventArgs e)
+		{
+            OpenFolder(settings.PSOBBFolder + '\\' + Settings.logFolder);
+		}
+
+        /// <summary>
+        /// bmpフォルダを開く
+        /// </summary>
+        private void menuOpenFolderBmp_Click(object sender, System.EventArgs e)
+		{
+            OpenFolder(settings.PSOBBFolder + '\\' + Settings.bmpFolder);
+        }
+
+        /// <summary>
+        /// 設定
+        /// </summary>
 		private void menuSetting_Click(object sender, System.EventArgs e)
 		{
 			ShowSettings();
 		}
 
-		private void menuMagTimer_Click(object sender, System.EventArgs e)
+        /// <summary>
+        /// 終了
+        /// </summary>
+        private void menuExit_Click(object sender, System.EventArgs e)
 		{
-			ShowMagTimer();
-		}
+            // チャットログの表示状態を保存
+            if (formChatLog != null && !formChatLog.IsDisposed)
+            {
+                settings.ChatLogVisible = formChatLog.Visible;
+            }
+            else
+            {
+                settings.ChatLogVisible = false;
+            }
 
-        private void menuChatLog_Click(object sender, System.EventArgs e)
-		{
-            ShowChatLog();
-		}
-
-		private void menuWindowResize_Click(object sender, System.EventArgs e)
-		{
-            ShowWindowResize();
-		}
-
-		private void menuExit_Click(object sender, System.EventArgs e)
-		{
-			Application.Exit();
+            // マグタイマーの表示状態を保存
+            if (formMagTimer != null && !formMagTimer.IsDisposed)
+            {
+                settings.MagTimerVisible = formMagTimer.Visible;
+            }
+            else
+            {
+                settings.MagTimerVisible = false;
+            }
+            
+            Application.Exit();
 		}
 
 		private void systemButtonTimer_Tick(object sender, EventArgs e)
@@ -373,7 +455,7 @@ namespace PSOBBTools
             if (formWindowResize == null || formWindowResize.IsDisposed)
             {
                 // ウィンドウサイズの変更ウィンドウ表示
-                using (formWindowResize = new FormWindowResize())
+                using (formWindowResize = new FormWindowResize(settings))
                 {
                     formWindowResize.ShowDialog();
                 }
@@ -445,7 +527,7 @@ namespace PSOBBTools
 
 				cf.FileName = e.FullPath;
 
-				if (settings.SSFileFormat == Settings.SSFileFormats.png)
+				if (settings.SSFileFormat == Settings.CompressionFormats.png)
 				{
 					cf.FileFormat = "png";
 				}
@@ -466,6 +548,14 @@ namespace PSOBBTools
 				}
 			}
 		}
+
+		/// <summary>
+		/// フォルダを開く
+		/// </summary>
+        private void OpenFolder(string path)
+        {
+            System.Diagnostics.Process.Start("explorer.exe", "/n," + path);
+        }
 
 		/// <summary>
 		/// 設定の読み込み
@@ -559,7 +649,7 @@ namespace PSOBBTools
 			if (!String.IsNullOrEmpty(settings.PSOBBFolder) && Directory.Exists(settings.PSOBBFolder))
 			{
 				logWatcher.Path = settings.PSOBBFolder + @"\" + Settings.logFolder;
-				bmpWatcher.Path = settings.PSOBBFolder + @"\" + Settings.ssFolder;
+				bmpWatcher.Path = settings.PSOBBFolder + @"\" + Settings.bmpFolder;
 				logWatcher.EnableRaisingEvents = settings.TeamChimeEnabled;
 				bmpWatcher.EnableRaisingEvents = settings.SSCompressionEnabled;
 			}

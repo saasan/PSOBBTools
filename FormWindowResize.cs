@@ -10,52 +10,63 @@ namespace PSOBBTools
 {
     public partial class FormWindowResize : Form
     {
-        public FormWindowResize()
+        private Settings settings;
+
+        public FormWindowResize(Settings settings)
         {
             InitializeComponent();
 
-            getClientSize();
+            this.settings = settings;
+
+            switch (settings.WindowResizeType)
+            {
+                case Settings.WindowSizeTypes.w640h480 :
+                    radioSize640.Checked = true;
+                    break;
+                case Settings.WindowSizeTypes.w800h600 :
+                    radioSize800.Checked = true;
+                    break;
+                case Settings.WindowSizeTypes.w1024h768 :
+                    radioSize1024.Checked = true;
+                    break;
+                default :
+                    radioSizeCustom.Checked = true;
+                    break;
+            }
+            upDownWidth.Value = settings.WindowResizeWidth;
+            upDownHeight.Value = settings.WindowResizeHeight;
         }
 
         private void buttonOK_Click(object sender, EventArgs e)
         {
             if (radioSize640.Checked)
             {
-                resizeWindow(640, 480);
+                ResizeWindow(640, 480);
+                settings.WindowResizeType = Settings.WindowSizeTypes.w640h480;
             }
             else if (radioSize800.Checked)
             {
-                resizeWindow(800, 600);
+                ResizeWindow(800, 600);
+                settings.WindowResizeType = Settings.WindowSizeTypes.w800h600;
             }
             else if (radioSize1024.Checked)
             {
-                resizeWindow(1024, 768);
+                ResizeWindow(1024, 768);
+                settings.WindowResizeType = Settings.WindowSizeTypes.w1024h768;
             }
             else
             {
-                resizeWindow((int)upDownWidth.Value, (int)upDownHeight.Value);
+                ResizeWindow((int)upDownWidth.Value, (int)upDownHeight.Value);
+                settings.WindowResizeType = Settings.WindowSizeTypes.custom;
             }
+
+            settings.WindowResizeWidth = upDownWidth.Value;
+            settings.WindowResizeHeight = upDownHeight.Value;
 
             this.Close();
         }
 
-        private void getClientSize()
-        {
-            Window.RECT rect;
-
-            IntPtr hwnd = Window.FindWindow(Settings.windowClassName, null);
-
-            if (hwnd != IntPtr.Zero)
-            {
-                if (Window.GetClientRect(hwnd, out rect))
-                {
-                    upDownWidth.Value = rect.right;
-                    upDownHeight.Value = rect.bottom;
-                }
-            }
-        }
-
-        private void resizeWindow(int width, int height)
+        private void ResizeWindow(int width, int height)
         {
             IntPtr hwnd = Window.FindWindow(Settings.windowClassName, null);
 
@@ -83,7 +94,7 @@ namespace PSOBBTools
         private void radioSize_CheckedChanged(object sender, EventArgs e)
         {
                 labelWidth.Enabled = upDownWidth.Enabled =
-                    labelHeight.Enabled = upDownHeight.Enabled = sender.Equals(radioSize);
+                    labelHeight.Enabled = upDownHeight.Enabled = sender.Equals(radioSizeCustom);
         }
 
         private void upDown_Enter(object sender, EventArgs e)
