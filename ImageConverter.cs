@@ -60,7 +60,7 @@ namespace PSOBBTools
 				// Œ³ƒtƒ@ƒCƒ‹‚ğíœ
 				File.Delete(filename);
 			}
-			catch (Exception e)
+			catch (Exception)
 			{
 			}
 		}

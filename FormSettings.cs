@@ -24,7 +24,6 @@ namespace PSOBBTools
 			//
 			InitializeComponent();
 
-			PropertyGridSettings.Size = this.ClientSize;
 			PropertyGridSettings.SelectedObject = settings;
 		}
 

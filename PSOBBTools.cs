@@ -1,17 +1,16 @@
 using System;
 using System.IO;
 using System.Windows.Forms;
-using System.Runtime.Serialization.Formatters.Soap;
-using System.Runtime.InteropServices;
-using System.Collections;
+using System.Xml.Serialization;         // XmlSerializer
+using System.Collections;               // Queue
 
 namespace PSOBBTools
 {
-	public class StartUp 
+	public class StartUp
 	{
 		// http://www.atmarkit.co.jp/fdotnet/dotnettips/145winmutex/winmutex.html
 		// アプリケーション固定名
-		private static string mutexName = Settings.applicationName;
+		private static string mutexName = Application.ProductName;
 		// 多重起動を防止するミューテックス
 		private static System.Threading.Mutex mutexObject;
 
@@ -31,10 +30,8 @@ namespace PSOBBTools
 				// ミューテックスを生成する
 				mutexObject = new System.Threading.Mutex(false, mutexName);
 			}
-			catch (ApplicationException e)
+			catch (ApplicationException)
 			{
-				// グローバル・ミューテックスによる多重起動禁止
-				MessageBox.Show("すでに起動しています。", Settings.applicationName, MessageBoxButtons.OK, MessageBoxIcon.Information);
 				return;
 			}
 
@@ -42,7 +39,7 @@ namespace PSOBBTools
 			if (mutexObject.WaitOne(0, false))
 			{
 				// アプリケーションを実行
-				using (Main main = new Main()) 
+				using (PSOBBTools main = new PSOBBTools())
 				{
 					Application.Run();
 				}
@@ -50,48 +47,26 @@ namespace PSOBBTools
 				// ミューテックスを解放する
 				mutexObject.ReleaseMutex();
 			}
-			else
-			{
-				// 警告を表示して終了
-				MessageBox.Show("すでに起動しています。", Settings.applicationName, MessageBoxButtons.OK, MessageBoxIcon.Information);
-			}
 
 			// ミューテックスを破棄する
 			mutexObject.Close();
 		}
 	}
 
-	public class Main : IDisposable
+	public class PSOBBTools : IDisposable
 	{
-		// API
-		private const int GWL_STYLE = -16;
-
-		private const int WS_SYSMENU = 0x00080000;
-		private const int WS_MINIMIZEBOX = 0x00020000;
-		private const int WS_MAXIMIZEBOX = 0x00010000;
-
-		[DllImport("user32.dll")] 
-		private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
-		[DllImport("user32.dll")] 
-		private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
-		[DllImport("user32.dll")]
-		private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
-
-		// PSOBBのウィンドウクラス名
-		private const string PSOBB_CLASS = "PHANTASY STAR ONLINE Blue Burst";
-
 		// 設定
 		private Settings settings = new Settings();
 
 		// メニュー
+		private MenuItem menuMagTimer = new MenuItem();
+        private MenuItem menuWindowResize = new MenuItem();
+        private MenuItem menuLine1 = new MenuItem();
 		private MenuItem menuTeamChime = new MenuItem();
-		private MenuItem menuCommand = new MenuItem();
 		private MenuItem menuSSCompression = new MenuItem();
 		private MenuItem menuSystemButtons = new MenuItem();
-		private MenuItem menuLine1 = new MenuItem();
-		private MenuItem menuSetting = new MenuItem();
 		private MenuItem menuLine2 = new MenuItem();
-		private MenuItem menuMagTimer = new MenuItem();
+		private MenuItem menuSetting = new MenuItem();
 		private MenuItem menuLine3 = new MenuItem();
 		private MenuItem menuExit = new MenuItem();
 		private ContextMenu contextMenu = new ContextMenu();
@@ -105,9 +80,11 @@ namespace PSOBBTools
 		private Timer systemButtonTimer = new Timer();
 
 		// 設定ウィンドウ
-		private Form formSettings = null;
+		private Form formSettings;
 		// マグタイマーウィンドウ
-		private Form formMagTimer = null;
+		private Form formMagTimer;
+        // ウィンドウサイズの変更ウィンドウ
+        private Form formWindowResize;
 
 		// 変換するSSリスト
 		private Queue convertFileList = Queue.Synchronized(new Queue());
@@ -115,8 +92,8 @@ namespace PSOBBTools
 		private System.Threading.Thread ImageConverterThread;
 		// ThreadingImageConverter
 		private ThreadingImageConverter imageConverter;
-		
-		public Main()
+
+		public PSOBBTools()
 		{
 			// 初期化処理
 			InitializeComponent();
@@ -134,7 +111,7 @@ namespace PSOBBTools
 		// 初期化処理
 		private void InitializeComponent()
 		{
-			try 
+			try
 			{
 				// コンテキストメニュー作成
 				CreateMenu();
@@ -151,17 +128,21 @@ namespace PSOBBTools
 			}
 			catch (Exception e)
 			{
-				MessageBox.Show("初期化処理に失敗しました。\n詳細：" + e.Message, Settings.applicationName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+				MessageBox.Show("初期化処理に失敗しました。\n詳細：" + e.Message, Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
 			}
 		}
 
 		// コンテキストメニュー作成
-		private void CreateMenu() 
+		private void CreateMenu()
 		{
 			menuMagTimer.Text = "マグタイマー(&M)";
 			menuMagTimer.DefaultItem = true;
 			menuMagTimer.Click += new EventHandler(this.menuMagTimer_Click);
 			contextMenu.MenuItems.Add(menuMagTimer);
+
+			menuWindowResize.Text = "ウィンドウサイズの変更(&R)";
+			menuWindowResize.Click += new EventHandler(this.menuWindowResize_Click);
+			contextMenu.MenuItems.Add(menuWindowResize);
 
 			menuLine1.Text = "-";
 			contextMenu.MenuItems.Add(menuLine1);
@@ -169,10 +150,6 @@ namespace PSOBBTools
 			menuTeamChime.Text = "チームチャットのチャイム(&T)";
 			menuTeamChime.Click += new EventHandler(this.menuTeamChime_Click);
 			contextMenu.MenuItems.Add(menuTeamChime);
-
-			menuCommand.Text = "コマンド(&C)";
-			menuCommand.Click += new EventHandler(this.menuCommand_Click);
-			contextMenu.MenuItems.Add(menuCommand);
 
 			menuSSCompression.Text = "SSの自動圧縮(&C)";
 			menuSSCompression.Click += new EventHandler(this.menuSSCompression_Click);
@@ -200,7 +177,7 @@ namespace PSOBBTools
 		}
 
 		// タスクトレイのアイコン作成
-		private void CreateNotifyIcon() 
+		private void CreateNotifyIcon()
 		{
 			System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
 			notifyIcon.Icon = new System.Drawing.Icon(assembly.GetManifestResourceStream("PSOBBTools.tray.ico"), 16, 16);
@@ -211,7 +188,7 @@ namespace PSOBBTools
 		}
 
 		// 監視設定
-		private void CreateWatcher() 
+		private void CreateWatcher()
 		{
 			// ログ監視
 			logWatcher.Filter = settings.TeamChatFileFilter;
@@ -231,7 +208,6 @@ namespace PSOBBTools
 		private void contextMenu_Popup(object sender, System.EventArgs e)
 		{
 			menuTeamChime.Checked = settings.TeamChimeEnabled;
-			menuCommand.Checked = settings.CommandEnabled;
 			menuSSCompression.Checked = settings.SSCompressionEnabled;
 			menuSystemButtons.Checked = settings.SystemButtonsEnabled;
 		}
@@ -242,16 +218,7 @@ namespace PSOBBTools
 			settings.TeamChimeEnabled = !settings.TeamChimeEnabled;
 
 			// 監視の有効化/無効化
-			logWatcher.EnableRaisingEvents = (settings.TeamChimeEnabled || settings.CommandEnabled);
-		}
-
-		private void menuCommand_Click(object sender, System.EventArgs e)
-		{
-			// 変更結果の反映
-			settings.CommandEnabled = !settings.CommandEnabled;
-
-			// 監視の有効化/無効化
-			logWatcher.EnableRaisingEvents = (settings.TeamChimeEnabled || settings.CommandEnabled);
+			logWatcher.EnableRaisingEvents = settings.TeamChimeEnabled;
 		}
 
 		private void menuSSCompression_Click(object sender, System.EventArgs e)
@@ -282,6 +249,11 @@ namespace PSOBBTools
 			ShowMagTimer();
 		}
 
+		private void menuWindowResize_Click(object sender, System.EventArgs e)
+		{
+            ShowWindowResize();
+		}
+
 		private void menuExit_Click(object sender, System.EventArgs e)
 		{
 			Application.Exit();
@@ -289,53 +261,114 @@ namespace PSOBBTools
 
 		private void systemButtonTimer_Tick(object sender, EventArgs e)
 		{
-			IntPtr hwnd = FindWindow(PSOBB_CLASS, null);
+			IntPtr hwnd = Window.FindWindow(Settings.windowClassName, null);
 
 			if (hwnd != IntPtr.Zero)
 			{
-				int style = GetWindowLong(hwnd, GWL_STYLE);
-				style |= (WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
-				SetWindowLong(hwnd, GWL_STYLE, style);
+                Window.WindowStyleFlags style = (Window.WindowStyleFlags)Window.GetWindowLong(hwnd, Window.GetWindowLongFlags.GWL_STYLE);
+
+                style |= (Window.WindowStyleFlags.WS_SYSMENU |
+                    Window.WindowStyleFlags.WS_MINIMIZEBOX |
+                    Window.WindowStyleFlags.WS_MAXIMIZEBOX);
+
+                Window.SetWindowLong(hwnd, Window.GetWindowLongFlags.GWL_STYLE, (int)style);
+
+                // ウィンドウを更新
+                Window.SetWindowPos(hwnd, IntPtr.Zero, 0, 0, 0, 0,
+                        Window.SetWindowPosFlags.SWP_NOMOVE |
+                        Window.SetWindowPosFlags.SWP_NOSIZE |
+                        Window.SetWindowPosFlags.SWP_NOZORDER |
+                        Window.SetWindowPosFlags.SWP_FRAMECHANGED |
+                        Window.SetWindowPosFlags.SWP_NOACTIVATE);
 			}
 		}
 
-		private void ShowSettings()
+        /// <summary>
+        /// 設定ウィンドウ表示
+        /// </summary>
+        private void ShowSettings()
 		{
-			// 設定ウィンドウ表示
-			if (formSettings == null)
+            // すでに表示されているか？
+            if (formSettings == null || formSettings.IsDisposed)
 			{
-				formSettings = new FormSettings(settings);
-				formSettings.ShowDialog();
-				formSettings.Dispose();
-				formSettings = null;
+                // メニューの無効化
+                foreach (MenuItem menu in contextMenu.MenuItems)
+                {
+                    if (!menu.Equals(menuExit))
+                    {
+                        menu.Enabled = false;
+                    }
+                }
+
+			    // 設定ウィンドウ表示
+                using (formSettings = new FormSettings(settings))
+                {
+				    formSettings.ShowDialog();
+                }
 
 				// 設定の反映
 				ValidateSettings();
-			}
+
+                // メニューの有効化
+                foreach (MenuItem menu in contextMenu.MenuItems)
+                {
+                    if (!menu.Equals(menuExit))
+                    {
+                        menu.Enabled = true;
+                    }
+                }
+            }
 			else
 			{
+                // アクティブにする
 				formSettings.Activate();
 			}
 		}
-	
+
+        /// <summary>
+        /// マグタイマーウィンドウ表示
+        /// </summary>
 		private void ShowMagTimer()
 		{
-			// マグタイマーウィンドウ表示
-			if (formMagTimer == null)
+            // すでに表示されているか？
+            if (formMagTimer == null || formMagTimer.IsDisposed)
 			{
-				formMagTimer = new FormMagTimer(settings);
-				formMagTimer.Location = new System.Drawing.Point(settings.MagTimerLocation.X, settings.MagTimerLocation.Y);
-				formMagTimer.ShowDialog();
-				settings.MagTimerLocation = formMagTimer.Location;
-				formMagTimer.Dispose();
-				formMagTimer = null;
+			    // マグタイマーウィンドウ表示
+                using (formMagTimer = new FormMagTimer(settings))
+                {
+				    formMagTimer.Location = settings.MagTimerLocation;
+				    formMagTimer.ShowDialog();
+				    settings.MagTimerLocation = formMagTimer.Location;
+                }
 			}
 			else
 			{
-				formMagTimer.Activate();
+                // アクティブにする
+                formMagTimer.Activate();
 			}
 		}
-	
+
+        /// <summary>
+        /// ウィンドウサイズの変更ウィンドウ表示
+        /// </summary>
+        private void ShowWindowResize()
+        {
+            // すでに表示されているか？
+            if (formWindowResize == null || formWindowResize.IsDisposed)
+            {
+                // ウィンドウサイズの変更ウィンドウ表示
+                using (formWindowResize = new FormWindowResize())
+                {
+                    formWindowResize.ShowDialog();
+                }
+            }
+            else
+            {
+                // アクティブにする
+                formWindowResize.Activate();
+            }
+        }
+
 		public void Dispose()
 		{
 			// 設定保存
@@ -363,13 +396,6 @@ namespace PSOBBTools
 			{
 				Sound.Play(settings.ChimeFile);
 			}
-
-			// コマンド
-			if (settings.CommandEnabled && File.Exists(e.FullPath))
-			{
-				// コマンド処理
-				cmd(e.FullPath);
-			}
 		}
 
 		private void BmpFile_Created(object source, FileSystemEventArgs e)
@@ -390,7 +416,6 @@ namespace PSOBBTools
 					cf.FileFormat = "jpg";
 				}
 
-
 				lock(convertFileList.SyncRoot)
 				{
 					convertFileList.Enqueue(cf);
@@ -404,78 +429,38 @@ namespace PSOBBTools
 			}
 		}
 
-		// コマンド処理
-		private void cmd(string file)
-		{
-			string line = "";
-			string lastLine = "";
-
-			try 
-			{
-				// 最終行を読み取る
-				using (StreamReader reader = new StreamReader(file, System.Text.Encoding.Unicode)) 
-				{
-					while ((line = reader.ReadLine()) != null)
-					{
-						lastLine = line;
-					}
-				}
-			}
-			catch (Exception e) 
-			{
-				return;
-			}
-
-			// 最終行から名前とメッセージを抽出
-			string name = "";
-			string message = "";
-			string [] split = null;
-
-			split = lastLine.Split('\t');
-			switch (split.Length)
-			{
-				case 3:
-					// チームチャットの場合
-					name = split[1];
-					message = split[2];
-					break;
-
-				case 4:
-					// 通常チャットの場合(一応対策)
-					name = split[2];
-					message = split[3];
-					break;
-
-				default:
-					break;
-			}
-
-			// 名前チェックOKなら実行
-			if (name == settings.ExecName)
-			{
-				CompileInvoke.Exec(Application.StartupPath + @"\command\" + message + ".cs");
-			}
-		}
-
 		/// <summary>
 		/// 設定の読み込み
 		/// </summary>
 		private void Load()
 		{
-			if (File.Exists(Settings.settingFile)) 
+            string filePath;
+
+            // 旧設定ファイルがあればそれを使う
+            if (File.Exists(Settings.oldSettingsFile))
+            {
+                filePath = Settings.oldSettingsFile;
+            }
+            else
+            {
+                filePath = Settings.settingsFolder + @"\" + Settings.settingsFile;
+            }
+
+			if (File.Exists(filePath))
 			{
-				try
-				{
-					System.IO.Stream stream = System.IO.File.OpenRead(@Settings.settingFile);
-					SoapFormatter soapFormatter = new SoapFormatter();
-					settings = (Settings)soapFormatter.Deserialize(stream);
-					stream.Close();
-				}
-				catch (Exception e)
-				{
-					MessageBox.Show("設定の読み込み中にエラーが発生しました。\n設定ファイルとプログラムのバージョンがあっているか確認してください。\n詳細：" + e.Message, Settings.applicationName, MessageBoxButtons.OK, MessageBoxIcon.Error);
-				}
-			}
+                try
+                {
+                    using (FileStream fs = new FileStream(filePath, FileMode.Open))
+                    {
+                        XmlSerializer serializer = new XmlSerializer(typeof(Settings));
+                        settings = (Settings)serializer.Deserialize(fs);
+                    }
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show("設定の読み込み中にエラーが発生しました。\n詳細：" + e.Message, Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
 		}
 
 		/// <summary>
@@ -483,11 +468,37 @@ namespace PSOBBTools
 		/// </summary>
 		private void Save()
 		{
-			System.IO.Stream stream = System.IO.File.Create(@Settings.settingFile);
-			SoapFormatter soapFormatter = new SoapFormatter();
-			soapFormatter.Serialize(stream, settings);
-			stream.Close(); 
-		}
+            string filePath;
+
+            // 旧設定ファイルがあればそれを使う
+            if (File.Exists(Settings.oldSettingsFile))
+            {
+                filePath = Settings.oldSettingsFile;
+            }
+            else
+            {
+                filePath = Settings.settingsFolder + @"\" + Settings.settingsFile;
+
+                // 保存フォルダ作成
+                if (!Directory.Exists(Settings.settingsFolder))
+                {
+                    Directory.CreateDirectory(Settings.settingsFolder);
+                }
+            }
+
+            try
+            {
+                using (FileStream fs = new FileStream(filePath, FileMode.Create))
+                {
+                    XmlSerializer serializer = new XmlSerializer(typeof(Settings));
+                    serializer.Serialize(fs, settings);
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("設定の保存中にエラーが発生しました。\n詳細：" + e.Message, Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
 
 		// 設定のチェックと反映
 		private void ValidateSettings()
@@ -500,14 +511,13 @@ namespace PSOBBTools
 			{
 				logWatcher.Path = settings.PSOBBFolder + @"\" + Settings.logFolder;
 				bmpWatcher.Path = settings.PSOBBFolder + @"\" + Settings.ssFolder;
-				logWatcher.EnableRaisingEvents = (settings.TeamChimeEnabled || settings.CommandEnabled);
+				logWatcher.EnableRaisingEvents = settings.TeamChimeEnabled;
 				bmpWatcher.EnableRaisingEvents = settings.SSCompressionEnabled;
 			}
 			else
 			{
-				MessageBox.Show("PSOBBのフォルダが見つかりません。設定を確認してください。", Settings.applicationName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+				MessageBox.Show("PSOBBのフォルダが見つかりません。設定を確認してください。", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
 				settings.TeamChimeEnabled = false;
-				settings.CommandEnabled = false;
 				settings.SSCompressionEnabled = false;
 				logWatcher.EnableRaisingEvents = false;
 				bmpWatcher.EnableRaisingEvents = false;

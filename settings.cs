@@ -8,254 +8,310 @@ namespace PSOBBTools
 	/// <summary>
 	/// アプリケーションの設定
 	/// </summary>
-	[Serializable, TypeConverter(typeof(PropertyDisplayConverter))]
+	[TypeConverter(typeof(PropertyDisplayConverter))]
 	public class Settings
 	{
-		// アプリケーション名
-		public const string applicationName = "PSOBBTools";
-		// 設定ファイル名
-		public const string settingFile = "PSOBBTools.xml";
-		// ログフォルダ名
+        /// <summary>設定ファイル名</summary>
+        public const string settingsFile = "settings.xml";
+        /// <summary>設定ファイルを保存するフォルダ名</summary>
+        public static readonly string settingsFolder;
+        /// <summary>旧設定ファイル名</summary>
+        public const string oldSettingsFile = "PSOBBTools.xml";
+        /// <summary>ログフォルダ名</summary>
 		public const string logFolder = "log";
-		// SSフォルダ名
+        /// <summary>SSフォルダ名</summary>
 		public const string ssFolder = "bmp";
+        /// <summary>PSOBBのウィンドウクラス名</summary>
+        public const string windowClassName = "PHANTASY STAR ONLINE Blue Burst";
 
-		// SSファイルの形式
+        /// <summary>マグタイマーの時間の最小値</summary>
+        public const decimal magTimerTimeMin = 1;
+        /// <summary>マグタイマーの時間の最大値</summary>
+        public const decimal magTimerTimeMax = 600;
+
+        /// <summary>SSファイルの形式</summary>
 		public enum SSFileFormats
 		{
 			png,
 			jpg
 		}
 
-		// PSOBBのフォルダ
+        /// <summary>PSOBBのフォルダ</summary>
 		private string psobbFolder = @"C:\Program Files\SEGA\PHANTASY STAR ONLINE Blue Burst";
-		// チームチャットのログファイル名
+        // チームチャットのログファイル名</summary>
 		private string teamChatFileFilter = "GuildChat*.txt";
 
-		// チームチャットのチャイムON/OFF
+        /// <summary>チームチャットのチャイムON/OFF</summary>
 		private bool teamChimeEnabled = false;
-		// コマンドON/OFF
-		private bool commandEnabled = false;
-		// SSの自動圧縮ON/OFF
+        /// <summary>SSの自動圧縮ON/OFF</summary>
 		private bool ssCompressionEnabled = false;
-		// システムボタンON/OFF
+        /// <summary>システムボタンON/OFF</summary>
 		private bool systemButtonsEnabled = false;
 
-		// チャイム音のファイル
+        /// <summary>チャイム音のファイル</summary>
 		private string chimeFile = "pon.wav";
 
-		// コマンドの実行を許可するキャラ名
-		private string execName = "";
-
-		// SSのファイル名
+        /// <summary>SSのファイル名</summary>
 		private string ssFileFilter = "pso*.bmp";
-		// SSの圧縮形式
+        /// <summary>SSの圧縮形式</summary>
 		private SSFileFormats ssFileFormat = SSFileFormats.jpg;
 
-		// マグタイマー音のファイル
+        /// <summary>マグタイマー音のファイル</summary>
 		private string magTimerFile = "popin.wav";
-		// マグタイマーの時間
+        /// <summary>マグタイマーの時間</summary>
 		private long magTimerTime = 210;
-		// マグタイマーの繰り返し
+        /// <summary>マグタイマーの繰り返し</summary>
 		private bool magTimerReload = false;
+        /// <summary>マグタイマーを常に手前に表示</summary>
+		private bool magTimerTopMost = false;
 
-		// マグタイマーウィンドウの位置
-		private System.Drawing.Point magTimerLocation = new System.Drawing.Point(10, 10);
+        /// <summary>マグタイマーウィンドウの位置</summary>
+		private System.Drawing.Point magTimerLocation = new System.Drawing.Point(50, 50);
 
-		public Settings()
+        /// <summary>変更イベント</summary>
+        public event EventHandler Changed;
+
+		static Settings()
 		{
+            string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            settingsFolder = appData + @"\" + System.Windows.Forms.Application.CompanyName + @"\" + System.Windows.Forms.Application.ProductName;
 		}
 
-		public Settings(SerializationInfo info, StreamingContext ctxt)
-		{
-			psobbFolder = (string)info.GetValue("psobbFolder", typeof(string));
+        public Settings()
+        {
+        }
 
-			teamChatFileFilter = (string)info.GetValue("teamChatFileFilter", typeof(string));
-
-			teamChimeEnabled = (bool)info.GetValue("teamChimeEnabled", typeof(bool));
-			commandEnabled = (bool)info.GetValue("commandEnabled", typeof(bool));
-			ssCompressionEnabled = (bool)info.GetValue("ssCompressionEnabled", typeof(bool));
-			systemButtonsEnabled = (bool)info.GetValue("systemButtonsEnabled", typeof(bool));
-
-			chimeFile = (string)info.GetValue("chimeFile", typeof(string));
-
-			execName = (string)info.GetValue("execName", typeof(string));
-
-			ssFileFilter = (string)info.GetValue("ssFileFilter", typeof(string));
-			ssFileFormat = (SSFileFormats)info.GetValue("ssFileFormat", typeof(SSFileFormats));
-
-			magTimerFile = (string)info.GetValue("magTimerFile", typeof(string));
-			magTimerTime = (long)info.GetValue("magTimerTime", typeof(long));
-			magTimerReload = (bool)info.GetValue("magTimerReload", typeof(bool));
-
-			magTimerLocation = (System.Drawing.Point)info.GetValue("magTimerLocation", typeof(System.Drawing.Point));
-		}
-
-		public void GetObjectData(SerializationInfo info, StreamingContext ctxt)
-		{
-			info.AddValue("psobbFolder", psobbFolder);
-
-			info.AddValue("teamChatFileFilter", teamChatFileFilter);
-
-			info.AddValue("teamChimeEnabled", teamChimeEnabled);
-			info.AddValue("commandEnabled", commandEnabled);
-			info.AddValue("ssCompressionEnabled", ssCompressionEnabled);
-			info.AddValue("systemButtonsEnabled", systemButtonsEnabled);
-
-			info.AddValue("chimeFile", chimeFile);
-
-			info.AddValue("execName", execName);
-
-			info.AddValue("ssFileFilter", ssFileFilter);
-			info.AddValue("ssFileFormat", ssFileFormat);
-		
-			info.AddValue("magTimerFile", magTimerFile);
-			info.AddValue("magTimerTime", magTimerTime);
-			info.AddValue("magTimerReload", magTimerReload);
-		
-			info.AddValue("magTimerLocation", magTimerLocation);
-		}
-
+        /// <summary>
+        /// 変更イベントを発生させる
+        /// </summary>
+        /// <param name="e">イベントデータ</param>
+        void OnChanged(EventArgs e)
+        {
+            if (Changed != null)
+            {
+                Changed(this, e);
+            }
+        }
+        
+        /// <summary>
+        /// PSOBBのフォルダ
+        /// </summary>
 		[Category("全般"),
 			PropertyDisplayName("PSOBBのフォルダ"),
-			Description("PSOBBのフォルダ(PsoBB.exe等があるフォルダ)を指定します。"),
+			Description("PSOBBのフォルダ(PsoBB.exe等があるフォルダ)を設定します。"),
 			Editor(typeof(System.Windows.Forms.Design.FolderNameEditor),
-			typeof(System.Drawing.Design.UITypeEditor))]
+			    typeof(System.Drawing.Design.UITypeEditor))]
 		public string PSOBBFolder
 		{
 			get { return psobbFolder; }
-			set { psobbFolder = value; }
+			set
+            {
+                psobbFolder = value;
+                OnChanged(EventArgs.Empty);
+            }
 		}
 
+        /// <summary>
+        /// チームチャットのログファイル名
+        /// </summary>
 		[Category("全般"),
 			PropertyDisplayName("ログファイル名(チーム)"),
-			Description("監視対象とするチームチャットのログファイル名を指定します。")]
+			Description("監視対象とするチームチャットのログファイル名を設定します。")]
 		public string TeamChatFileFilter
 		{
 			get { return teamChatFileFilter; }
-			set { teamChatFileFilter = value; }
+			set
+			{
+				teamChatFileFilter = value;
+                OnChanged(EventArgs.Empty);
+            }
 		}
 
+        /// <summary>
+        /// チームチャットのチャイムON/OFF
+        /// </summary>
 		[Category("全般"),
 			PropertyDisplayName("チームチャットのチャイム"),
-			Description("チームチャットのチャイムの使用を切り替えます。")]
+            Description("チームチャットのチャイムを使用するかどうかを設定します。")]
 		public bool TeamChimeEnabled
 		{
 			get { return teamChimeEnabled; }
-			set { teamChimeEnabled = value; }
+			set
+			{
+				teamChimeEnabled = value;
+                OnChanged(EventArgs.Empty);
+            }
 		}
 
-		[Category("全般"),
-			PropertyDisplayName("コマンドの使用"),
-			Description("コマンドの使用を切り替えます。")]
-		public bool CommandEnabled
-		{
-			get { return commandEnabled; }
-			set { commandEnabled = value; }
-		}
-
+        /// <summary>
+        /// SSの自動圧縮ON/OFF
+        /// </summary>
 		[Category("全般"),
 			PropertyDisplayName("SSの自動圧縮"),
-			Description("スクリーンショットの自動圧縮の使用を切り替えます。")]
+            Description("スクリーンショットを自動圧縮するかどうかを設定します。")]
 		public bool SSCompressionEnabled
 		{
 			get { return ssCompressionEnabled; }
-			set { ssCompressionEnabled = value; }
+			set
+			{
+				ssCompressionEnabled = value;
+                OnChanged(EventArgs.Empty);
+            }
 		}
 
+        /// <summary>
+        /// システムボタンON/OFF
+        /// </summary>
 		[Category("全般"),
 			PropertyDisplayName("システムボタンの表示"),
-			Description("システムボタンの表示を切り替えます。")]
+            Description("システムボタンを表示するかどうかを設定します。")]
 		public bool SystemButtonsEnabled
 		{
 			get { return systemButtonsEnabled; }
-			set { systemButtonsEnabled = value; }
+			set
+			{
+				systemButtonsEnabled = value;
+                OnChanged(EventArgs.Empty);
+            }
 		}
 
+        /// <summary>
+        /// チャイム音のファイル
+        /// </summary>
 		[Category("チームチャットのチャイム"),
 			PropertyDisplayName("チャイム用WAVファイル"),
-			Description("チャイムとして使用するWAVファイルを指定します。"),
+			Description("チャイムとして使用するWAVファイルを設定します。"),
 			Editor(typeof(UIFileNameEditor),
-			typeof(System.Drawing.Design.UITypeEditor)),
+			    typeof(System.Drawing.Design.UITypeEditor)),
 			FileDialogFilter("WAVファイル (*.wav)|*.wav")]
 		public string ChimeFile
 		{
 			get { return chimeFile; }
-			set { chimeFile = value; }
+			set
+			{
+				chimeFile = value;
+                OnChanged(EventArgs.Empty);
+            }
 		}
 
-		[Category("コマンド"),
-			PropertyDisplayName("コマンド許可キャラ名"),
-			Description("コマンドの実行を許可するキャラクター名を指定します。")]
-		public string ExecName
-		{
-			get { return execName; }
-			set { execName = value; }
-		}
-
+        /// <summary>
+        /// SSのファイル名
+        /// </summary>
 		[Category("SSの自動圧縮"),
 			PropertyDisplayName("SSのファイル名"),
-			Description("監視対象とするスクリーンショットのファイル名を指定します。")]
+			Description("監視対象とするスクリーンショットのファイル名を設定します。")]
 		public string SSFileFilter
 		{
 			get { return ssFileFilter; }
-			set { ssFileFilter = value; }
+			set
+			{
+				ssFileFilter = value;
+                OnChanged(EventArgs.Empty);
+            }
 		}
 
+        /// <summary>
+        /// SSの圧縮形式
+        /// </summary>
 		[Category("SSの自動圧縮"),
 			PropertyDisplayName("SSの圧縮形式"),
-			Description("スクリーンショットの圧縮形式を指定します。")]
+			Description("スクリーンショットの圧縮形式を設定します。")]
 		public SSFileFormats SSFileFormat
 		{
 			get { return ssFileFormat; }
-			set { ssFileFormat = value; }
+			set
+			{
+				ssFileFormat = value;
+                OnChanged(EventArgs.Empty);
+            }
 		}
 
+        /// <summary>
+        /// マグタイマー音のファイル
+        /// </summary>
 		[Category("マグタイマー"),
 		PropertyDisplayName("マグタイマー用WAVファイル"),
-			Description("マグタイマーの音として使用するWAVファイルを指定します。"),
+			Description("マグタイマーの音として使用するWAVファイルを設定します。"),
 			Editor(typeof(UIFileNameEditor),
-			typeof(System.Drawing.Design.UITypeEditor)),
+			    typeof(System.Drawing.Design.UITypeEditor)),
 			FileDialogFilter("WAVファイル (*.wav)|*.wav")]
 		public string MagTimerFile
 		{
 			get { return magTimerFile; }
-			set { magTimerFile = value; }
+			set
+			{
+				magTimerFile = value;
+                OnChanged(EventArgs.Empty);
+            }
 		}
 
+        /// <summary>
+        /// マグタイマーの時間
+        /// </summary>
 		[Category("マグタイマー"),
 			PropertyDisplayName("マグタイマーの時間(秒)"),
-			Description("マグタイマーの時間(秒)を指定します。")]
+			Description("マグタイマーの時間(秒)を設定します。")]
 		public long MagTimerTime
 		{
 			get { return magTimerTime; }
 			set
 			{
-				if (value > 0)
+                if (magTimerTimeMin <= value && value <= magTimerTimeMax)
 				{
 					magTimerTime = value;
-				}
+                    OnChanged(EventArgs.Empty);
+                }
 				else
 				{
-					System.Windows.Forms.MessageBox.Show("マグタイマーの時間には整数を指定してください。", applicationName, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+                    System.Windows.Forms.MessageBox.Show("マグタイマーの時間には" + magTimerTimeMin + "から" + magTimerTimeMax + "の間の整数を指定してください。", System.Windows.Forms.Application.ProductName, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
 				}
 			}
 		}
 
+        /// <summary>
+        /// マグタイマーの繰り返し
+        /// </summary>
 		[Category("マグタイマー"),
 			PropertyDisplayName("マグタイマーの繰り返し"),
-			Description("マグタイマーの繰り返しを指定します。")]
+			Description("マグタイマーの繰り返しを設定します。")]
 		public bool MagTimerReload
 		{
 			get { return magTimerReload; }
-			set { magTimerReload = value; }
+			set
+			{
+				magTimerReload = value;
+                OnChanged(EventArgs.Empty);
+            }
 		}
 
+        /// <summary>
+        /// マグタイマーを常に手前に表示
+        /// </summary>
+        [Category("マグタイマー"),
+            PropertyDisplayName("マグタイマーを常に手前に表示"),
+            Description("マグタイマーを常に手前に表示するかどうかを設定します。")]
+        public bool MagTimerTopMost
+        {
+            get { return magTimerTopMost; }
+            set
+			{
+				magTimerTopMost = value;
+                OnChanged(EventArgs.Empty);
+            }
+        }
+
+        /// <summary>
+        /// マグタイマーウィンドウの位置
+        /// </summary>
 		[Browsable(false)]
 		public System.Drawing.Point MagTimerLocation
 		{
 			get { return magTimerLocation; }
-			set { magTimerLocation = value; }
+			set
+			{
+				magTimerLocation = value;
+                OnChanged(EventArgs.Empty);
+            }
 		}
 	}
 }
