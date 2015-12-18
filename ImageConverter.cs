@@ -48,10 +48,36 @@ namespace PSOBBTools
 			// 新しいファイル名
 			string newFilename = Path.ChangeExtension(filename, "." + extension);
 
-			try
+			FileStream fs = null;
+			int i = 0;
+
+			// 5回ほどファイルが開けるか試す
+			while (i < 5)
+			{
+				try
+				{
+					// ファイルを開く
+					fs = new FileStream(filename, FileMode.Open, FileAccess.Read);
+
+					break;
+				}
+				catch (System.IO.IOException)
+				{
+				}
+				catch (Exception e)
+				{
+					System.Windows.Forms.MessageBox.Show(e.Message);
+
+					return;
+				}
+
+				System.Threading.Thread.Sleep(500);
+				i++;
+			}
+
+			if (fs != null)
 			{
 				// 画像ファイルを読み込む
-				FileStream fs = new FileStream(filename, FileMode.Open, FileAccess.Read);
 				System.Drawing.Bitmap bmp = new System.Drawing.Bitmap(fs);
 				// 保存
 				bmp.Save(newFilename, format);
@@ -60,9 +86,6 @@ namespace PSOBBTools
 
 				// 元ファイルを削除
 				File.Delete(filename);
-			}
-			catch (Exception)
-			{
 			}
 		}
 
@@ -80,7 +103,7 @@ namespace PSOBBTools
 	public class ThreadingImageConverter
 	{
 
-        private Queue<convertFile> filelist;
+		private Queue<convertFile> filelist;
 
 		public struct convertFile
 		{
@@ -112,7 +135,7 @@ namespace PSOBBTools
 			}
 		}
 
-        public ThreadingImageConverter(Queue<convertFile> list)
+		public ThreadingImageConverter(Queue<convertFile> list)
 		{
 			filelist = list;
 		}
@@ -126,14 +149,14 @@ namespace PSOBBTools
 
 		public void Convert()
 		{
-            lock (((ICollection)filelist).SyncRoot)
+			lock (((ICollection)filelist).SyncRoot)
 			{
-			    while (filelist.Count > 0)
-			    {
-				    convertFile c = filelist.Dequeue();
+				while (filelist.Count > 0)
+				{
+					convertFile c = filelist.Dequeue();
 
-				    ImageConverter.Convert(c.FileName, c.FileFormat);
-			    }
+					ImageConverter.Convert(c.FileName, c.FileFormat);
+				}
 			}
 		}
 	}

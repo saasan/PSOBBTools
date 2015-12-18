@@ -47,8 +47,12 @@ namespace PSOBBTools
             // 設定の適用
             ApplySettings();
 
-            // ファイルを読み込む
-            ReadFile();
+            // ログファイルを読み込む
+            LoadLogFile();
+
+            // ログを表示
+            AddListViewItems(listViewChatLog, logItems);
+            AddListViewItems(listViewTeamChatLog, teamLogItems);
 
             // タイマーを開始
             timerUpdateListView.Enabled = true;
@@ -95,7 +99,7 @@ namespace PSOBBTools
         /// </summary>
         private void menuFileOpenFolderLog_Click(object sender, EventArgs e)
         {
-            OpenFolder(settings.PSOBBFolder + '\\' + Settings.logFolder);
+            OpenFolder(settings.PSOBBFolder + Path.DirectorySeparatorChar + Settings.logFolder);
         }
 
         /// <summary>
@@ -317,61 +321,126 @@ namespace PSOBBTools
         }
 
         /// <summary>
-        /// ファイルを読み込む
+        /// ログファイルを読み込む
         /// </summary>
-        private void ReadFile()
+        private void LoadLogFile()
         {
-            DateTime dt = DateTime.Today;
-
-            // 日付
-            string date = dt.Year.ToString("d4") + '/' + dt.Month.ToString("d2") + '/' + dt.Day.ToString("d2");
-            // ファイル名の日付部分
-            string dateString = dt.Year.ToString("d4") + dt.Month.ToString("d2") + dt.Day.ToString("d2");
+            // 今日
+            DateTime today = DateTime.Today;
+            // 昨日
+            DateTime yesterday = today.AddDays(-1.0);
 
             // ログフォルダ
-            string logFolder = settings.PSOBBFolder + @"\" + Settings.logFolder + @"\";
+            string logFolder = settings.PSOBBFolder + Path.DirectorySeparatorChar +
+                Settings.logFolder + Path.DirectorySeparatorChar;
 
-            // チャットログ
+            // 昨日のログ
             {
-                logTail.FullPath = logFolder + Settings.chatFilePrefix + dateString + Settings.chatFileExtension;
+                // 日付文字列
+                string dateString = DateToString(yesterday);
+                // ファイル名の日付部分
+                string fileDateString = DateToFileString(yesterday);
 
-                string content = "";
-
-                try
+                // チャットログ
                 {
-                    content = logTail.GetDifference();
-                }
-                catch (Exception) {}
+                    string file = logFolder + Settings.chatFilePrefix + fileDateString + Settings.chatFileExtension;
+                    string content = LoadFile(file);
 
-                AddLog(false, date, content);
+                    if (!String.IsNullOrEmpty(content))
+                    {
+                        AddLog(false, dateString, content);
+                    }
+                }
+
+                // チームチャットログ
+                {
+                    string file = logFolder + Settings.teamChatFilePrefix + fileDateString + Settings.teamChatFileExtension;
+                    string content = LoadFile(file);
+
+                    if (!String.IsNullOrEmpty(content))
+                    {
+                        AddLog(true, dateString, content);
+                    }
+                }
             }
 
-            // チームチャットログ
+            // 今日のログ
             {
-                teamLogTail.FullPath = logFolder + Settings.teamChatFilePrefix + dateString + Settings.teamChatFileExtension;
+                // 日付文字列
+                string dateString = DateToString(today);
+                // ファイル名の日付部分
+                string fileDateString = DateToFileString(today);
 
-                string content = "";
-
-                try
+                // チャットログ
                 {
-                    content = teamLogTail.GetDifference();
-                }
-                catch (Exception) {}
+                    logTail.FullPath = logFolder + Settings.chatFilePrefix + fileDateString + Settings.chatFileExtension;
 
-                AddLog(true, date, content);
+                    string content = "";
+
+                    try
+                    {
+                        content = logTail.GetDifference();
+                    }
+                    catch (Exception) { }
+
+                    AddLog(false, dateString, content);
+                }
+
+                // チームチャットログ
+                {
+                    teamLogTail.FullPath = logFolder + Settings.teamChatFilePrefix + fileDateString + Settings.teamChatFileExtension;
+
+                    string content = "";
+
+                    try
+                    {
+                        content = teamLogTail.GetDifference();
+                    }
+                    catch (Exception) { }
+
+                    AddLog(true, dateString, content);
+                }
             }
         }
         
         /// <summary>
+        /// ファイルを読み込む
+        /// </summary>
+        private string LoadFile(string file)
+        {
+            string content = "";
+
+            if (System.IO.File.Exists(file))
+            {
+                using (StreamReader sr = new StreamReader(file, Encoding.Unicode))
+                {
+                    content = sr.ReadToEnd();
+                }
+            }
+
+            return content;
+        }
+
+        private string DateToString(DateTime date)
+        {
+            return date.Year.ToString("d4") + '/' + date.Month.ToString("d2") + '/' + date.Day.ToString("d2");
+        }
+
+        private string DateToFileString(DateTime date)
+        {
+            return date.Year.ToString("d4") + date.Month.ToString("d2") + date.Day.ToString("d2");
+        }
+
+        /// <summary>
         /// ログをキューに追加する
         /// </summary>
-        private void AddLog(bool isTeamLog, string date, string content)
+        private void AddLog(bool isTeamLog, string dateString, string content)
         {
-            string[] lines = content.Split(new char[] { '\r', '\n' });
+            string[] lines = content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
 
             foreach (string line in lines)
             {
-                string[] parts = line.Split('\t');
+                string[] parts = line.Split(new char[] { '\t' });
 
                 if (isTeamLog)
                 {
@@ -379,7 +448,7 @@ namespace PSOBBTools
 
                     if (parts.Length == 3)
                     {
-                        parts[0] = date + ' ' + parts[0];
+                        parts[0] = dateString + ' ' + parts[0];
 
                         lock (((ICollection)teamLogItems).SyncRoot)
                         {
@@ -394,7 +463,7 @@ namespace PSOBBTools
                     if (parts.Length == 4)
                     {
                         // 4ならギルドカードID有り
-                        parts[0] = date + ' ' + parts[0];
+                        parts[0] = dateString + ' ' + parts[0];
 
                         lock (((ICollection)logItems).SyncRoot)
                         {
@@ -404,7 +473,7 @@ namespace PSOBBTools
                     else if (parts.Length == 3)
                     {
                         // 3ならギルドカードID無し
-                        parts[0] = date + ' ' + parts[0];
+                        parts[0] = dateString + ' ' + parts[0];
 
                         lock (((ICollection)logItems).SyncRoot)
                         {
@@ -435,9 +504,7 @@ namespace PSOBBTools
                 // アイテムを追加
                 while (items.Count > 0)
                 {
-                    ListViewItem item = items.Dequeue();
-
-                    listView.Items.Add(item);
+                    listView.Items.Add(items.Dequeue());
                 }
             }
 
@@ -507,12 +574,12 @@ namespace PSOBBTools
 
             // 一旦監視を停止
             bool logTailEnable = logTail.EnableRaisingEvents;
-            bool teamLogTailEnable = logTail.EnableRaisingEvents;
+            bool teamLogTailEnable = teamLogTail.EnableRaisingEvents;
             logTail.EnableRaisingEvents = teamLogTail.EnableRaisingEvents = false;
 
             if (!String.IsNullOrEmpty(settings.PSOBBFolder) && Directory.Exists(settings.PSOBBFolder))
             {
-                logTail.Path = teamLogTail.Path = settings.PSOBBFolder + @"\" + Settings.logFolder;
+                logTail.Path = teamLogTail.Path = settings.PSOBBFolder + Path.DirectorySeparatorChar + Settings.logFolder;
 
                 // 監視を元に戻す
                 logTail.EnableRaisingEvents = logTailEnable;

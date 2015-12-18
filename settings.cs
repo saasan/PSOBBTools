@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.ComponentModel;
 using System.Design;
 using System.Runtime.Serialization;
@@ -49,15 +50,6 @@ namespace PSOBBTools
 			jpg
 		}
 
-        /// <summary>ウィンドウサイズのタイプ</summary>
-        public enum WindowSizeTypes
-        {
-            w640h480,
-            w800h600,
-            w1024h768,
-            custom
-        }
-
         /// <summary>PSOBBのフォルダ</summary>
 		private string psobbFolder = @"C:\Program Files\SEGA\PHANTASY STAR ONLINE Blue Burst";
 
@@ -67,12 +59,14 @@ namespace PSOBBTools
 		private bool ssCompressionEnabled = false;
         /// <summary>システムボタンON/OFF</summary>
 		private bool systemButtonsEnabled = false;
+        /// <summary>自動的にウィンドウの位置とサイズを復元ON/OFF</summary>
+        private bool windowAutoRestoreEnabled = false;
 
         /// <summary>チャイム音のファイル</summary>
 		private string chimeFile = "pon.wav";
 
         /// <summary>SSの圧縮形式</summary>
-		private CompressionFormats ssFileFormat = CompressionFormats.jpg;
+        private CompressionFormats ssFileFormat = CompressionFormats.png;
 
         /// <summary>マグタイマー音のファイル</summary>
 		private string magTimerFile = "popin.wav";
@@ -106,12 +100,10 @@ namespace PSOBBTools
         /// <summary>チャットログの自動スクロール</summary>
         private bool chatLogAutoScroll = true;
 
-        /// <summary>ウィンドウサイズのタイプ</summary>
-        private WindowSizeTypes windowResizeType = WindowSizeTypes.custom;
-        /// <summary>ウィンドウサイズの変更の幅</summary>
-        private decimal windowResizeWidth = 640;
-        /// <summary>ウィンドウサイズの変更の高さ</summary>
-        private decimal windowResizeHeight = 480;
+        /// <summary>ウィンドウの位置</summary>
+        private Point windowPosition = new Point(50, 50);
+        /// <summary>ウィンドウのサイズ</summary>
+        private Size windowSize = new Size(640, 480);
 
         /// <summary>変更イベント</summary>
         public event EventHandler Changed;
@@ -119,7 +111,9 @@ namespace PSOBBTools
 		static Settings()
 		{
             string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            settingsFolder = appData + @"\" + System.Windows.Forms.Application.CompanyName + @"\" + System.Windows.Forms.Application.ProductName;
+            settingsFolder = appData + Path.DirectorySeparatorChar +
+                Application.CompanyName + Path.DirectorySeparatorChar +
+                Application.ProductName;
 		}
 
         public Settings()
@@ -207,6 +201,22 @@ namespace PSOBBTools
 			set
 			{
 				systemButtonsEnabled = value;
+                OnChanged(EventArgs.Empty);
+            }
+		}
+
+        /// <summary>
+        /// 自動的にウィンドウの位置とサイズを復元ON/OFF
+        /// </summary>
+		[Category("全般"),
+            PropertyDisplayName("自動的にウィンドウの位置とサイズを復元"),
+            Description("自動的にウィンドウの位置とサイズを復元するかどうかを設定します。(True=する、False=しない)")]
+        public bool WindowAutoRestoreEnabled
+		{
+			get { return windowAutoRestoreEnabled; }
+			set
+			{
+				windowAutoRestoreEnabled = value;
                 OnChanged(EventArgs.Empty);
             }
 		}
@@ -373,6 +383,30 @@ namespace PSOBBTools
         }
 
         /// <summary>
+        /// ウィンドウの位置
+        /// </summary>
+        [Category("ウィンドウの位置とサイズを復元"),
+            PropertyDisplayName("位置"),
+            Description("復元するウィンドウの位置を設定します。")]
+        public Point WindowPosition
+        {
+            get { return windowPosition; }
+            set { windowPosition = value; }
+        }
+
+        /// <summary>
+        /// ウィンドウのサイズ
+        /// </summary>
+        [Category("ウィンドウの位置とサイズを復元"),
+            PropertyDisplayName("サイズ"),
+            Description("復元するウィンドウのクライアント領域のサイズを設定します。")]
+        public Size WindowSize
+        {
+            get { return windowSize; }
+            set { windowSize = value; }
+        }
+
+        /// <summary>
         /// チャットログウィンドウを表示
         /// </summary>
         [Browsable(false)]
@@ -430,36 +464,6 @@ namespace PSOBBTools
         {
             get { return chatLogTeamSortOrder; }
             set { chatLogTeamSortOrder = value; }
-        }
-
-        /// <summary>
-        /// ウィンドウサイズのタイプ
-        /// </summary>
-        [Browsable(false)]
-        public WindowSizeTypes WindowResizeType
-        {
-            get { return windowResizeType; }
-            set { windowResizeType = value; }
-        }
-
-        /// <summary>
-        /// ウィンドウサイズの変更の幅
-        /// </summary>
-        [Browsable(false)]
-        public decimal WindowResizeWidth
-        {
-            get { return windowResizeWidth; }
-            set { windowResizeWidth = value; }
-        }
-
-        /// <summary>
-        /// ウィンドウサイズの変更の高さ
-        /// </summary>
-        [Browsable(false)]
-        public decimal WindowResizeHeight
-        {
-            get { return windowResizeHeight; }
-            set { windowResizeHeight = value; }
         }
     }
 }

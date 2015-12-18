@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Windows.Forms;
+using System.Drawing;
 using System.Xml.Serialization;     // XmlSerializer
 using System.Collections;           // ICollection
 using System.Collections.Generic;   // Queue<>
@@ -62,17 +63,20 @@ namespace PSOBBTools
 		// メニュー
         private MenuItem menuChatLog = new MenuItem();
 		private MenuItem menuMagTimer = new MenuItem();
-        private MenuItem menuWindowResize = new MenuItem();
         private MenuItem menuLine1 = new MenuItem();
 		private MenuItem menuTeamChime = new MenuItem();
 		private MenuItem menuSSCompression = new MenuItem();
 		private MenuItem menuSystemButtons = new MenuItem();
-		private MenuItem menuLine2 = new MenuItem();
+        private MenuItem menuWindowAutoRestore = new MenuItem();
+        private MenuItem menuLine2 = new MenuItem();
+        private MenuItem menuWindowSave = new MenuItem();
+        private MenuItem menuWindowRestore = new MenuItem();
+		private MenuItem menuLine3 = new MenuItem();
 		private MenuItem menuOpenFolderLog = new MenuItem();
 		private MenuItem menuOpenFolderBmp = new MenuItem();
-		private MenuItem menuLine3 = new MenuItem();
-		private MenuItem menuSetting = new MenuItem();
 		private MenuItem menuLine4 = new MenuItem();
+		private MenuItem menuSetting = new MenuItem();
+		private MenuItem menuLine5 = new MenuItem();
 		private MenuItem menuExit = new MenuItem();
 		private ContextMenu contextMenu = new ContextMenu();
 		// タスクトレイのアイコン
@@ -81,15 +85,13 @@ namespace PSOBBTools
 		private FileSystemWatcher logWatcher = new FileSystemWatcher();
 		// SS監視
 		private FileSystemWatcher bmpWatcher = new FileSystemWatcher();
-		// システムボタン用タイマ
-		private Timer systemButtonTimer = new Timer();
+		// ウィンドウ関連(システムボタン、位置とサイズ)用タイマ
+		private Timer windowTimer = new Timer();
 
 		// チャットログウィンドウ
 		private Form formChatLog;
 		// マグタイマーウィンドウ
 		private Form formMagTimer;
-        // ウィンドウサイズの変更ウィンドウ
-        private Form formWindowResize;
 		// 設定ウィンドウ
 		private Form formSettings;
 
@@ -100,7 +102,10 @@ namespace PSOBBTools
 		// ThreadingImageConverter
 		private ThreadingImageConverter imageConverter;
 
-		public PSOBBTools()
+        // PSOBBのウィンドウ検出が初回
+        private bool firstTime = true;
+
+        public PSOBBTools()
 		{
 			// 初期化処理
 			InitializeComponent();
@@ -128,19 +133,22 @@ namespace PSOBBTools
             {
                 ShowMagTimer();
             }
-		}
+
+            // タスクトレイのアイコンを表示
+            notifyIcon.Visible = true;
+        }
 
         public void Dispose()
         {
+            // タスクトレイのアイコンを非表示
+            notifyIcon.Visible = false;
+
             // イベントハンドラを削除
             settings.Changed -= new EventHandler(settings_Changed);
 
             // 監視を停止
             logWatcher.EnableRaisingEvents = bmpWatcher.EnableRaisingEvents = false;
             
-            // タスクトレイのアイコンを非表示
-            notifyIcon.Visible = false;
-
             // 設定保存
             Save();
 
@@ -168,8 +176,8 @@ namespace PSOBBTools
 				CreateWatcher();
 
 				// タイマー設定
-				systemButtonTimer.Interval = 1000;
-				systemButtonTimer.Tick += new EventHandler(systemButtonTimer_Tick);
+				windowTimer.Interval = 1000;
+				windowTimer.Tick += new EventHandler(windowTimer_Tick);
 			}
 			catch (Exception e)
 			{
@@ -191,12 +199,8 @@ namespace PSOBBTools
 			menuMagTimer.Click += new EventHandler(this.menuMagTimer_Click);
 			contextMenu.MenuItems.Add(menuMagTimer);
 
-			menuWindowResize.Text = "ウィンドウサイズの変更(&R)";
-			menuWindowResize.Click += new EventHandler(this.menuWindowResize_Click);
-			contextMenu.MenuItems.Add(menuWindowResize);
-
-			menuLine1.Text = "-";
-			contextMenu.MenuItems.Add(menuLine1);
+            menuLine1.Text = "-";
+            contextMenu.MenuItems.Add(menuLine1);
 
 			menuTeamChime.Text = "チームチャットのチャイム(&T)";
 			menuTeamChime.Click += new EventHandler(this.menuTeamChime_Click);
@@ -210,8 +214,23 @@ namespace PSOBBTools
 			menuSystemButtons.Click += new EventHandler(this.menuSystemButtons_Click);
 			contextMenu.MenuItems.Add(menuSystemButtons);
 
+            menuWindowAutoRestore.Text = "自動的にウィンドウの位置とサイズを復元(&A)";
+			menuWindowAutoRestore.Click += new EventHandler(this.menuWindowAutoRestore_Click);
+			contextMenu.MenuItems.Add(menuWindowAutoRestore);
+
 			menuLine2.Text = "-";
 			contextMenu.MenuItems.Add(menuLine2);
+
+            menuWindowSave.Text = "ウィンドウの位置とサイズを保存(&V)";
+			menuWindowSave.Click += new EventHandler(this.menuWindowSave_Click);
+			contextMenu.MenuItems.Add(menuWindowSave);
+
+            menuWindowRestore.Text = "ウィンドウの位置とサイズを復元(&R)";
+            menuWindowRestore.Click += new EventHandler(this.menuWindowRestore_Click);
+            contextMenu.MenuItems.Add(menuWindowRestore);
+
+			menuLine3.Text = "-";
+			contextMenu.MenuItems.Add(menuLine3);
 
             menuOpenFolderLog.Text = "logフォルダを開く(&L)";
 			menuOpenFolderLog.Click += new EventHandler(this.menuOpenFolderLog_Click);
@@ -221,15 +240,15 @@ namespace PSOBBTools
 			menuOpenFolderBmp.Click += new EventHandler(this.menuOpenFolderBmp_Click);
 			contextMenu.MenuItems.Add(menuOpenFolderBmp);
 
-			menuLine3.Text = "-";
-			contextMenu.MenuItems.Add(menuLine3);
+			menuLine4.Text = "-";
+			contextMenu.MenuItems.Add(menuLine4);
 
 			menuSetting.Text = "設定(&S)";
 			menuSetting.Click += new EventHandler(this.menuSetting_Click);
 			contextMenu.MenuItems.Add(menuSetting);
 
-			menuLine4.Text = "-";
-			contextMenu.MenuItems.Add(menuLine4);
+			menuLine5.Text = "-";
+			contextMenu.MenuItems.Add(menuLine5);
 
 			menuExit.Text = "終了(&X)";
 			menuExit.Click += new EventHandler(this.menuExit_Click);
@@ -248,7 +267,6 @@ namespace PSOBBTools
 			notifyIcon.Text = "PSOBBTools";
 			notifyIcon.ContextMenu = contextMenu;
 			notifyIcon.DoubleClick += new EventHandler(notifyIcon_DoubleClick);
-			notifyIcon.Visible = true;
 		}
 
         /// <summary>
@@ -282,7 +300,10 @@ namespace PSOBBTools
 			menuTeamChime.Checked = settings.TeamChimeEnabled;
 			menuSSCompression.Checked = settings.SSCompressionEnabled;
 			menuSystemButtons.Checked = settings.SystemButtonsEnabled;
-		}
+            menuWindowAutoRestore.Checked = settings.WindowAutoRestoreEnabled;
+
+            menuWindowSave.Enabled = menuWindowRestore.Enabled = WindowExists();
+        }
 
         /// <summary>
         /// チャットログ
@@ -301,11 +322,19 @@ namespace PSOBBTools
         }
 
         /// <summary>
-        /// ウィンドウサイズの変更
+        /// ウィンドウの位置とサイズを保存
         /// </summary>
-        private void menuWindowResize_Click(object sender, System.EventArgs e)
+        private void menuWindowSave_Click(object sender, System.EventArgs e)
         {
-            ShowWindowResize();
+            SaveWindow();
+        }
+
+        /// <summary>
+        /// ウィンドウの位置とサイズを復元
+        /// </summary>
+        private void menuWindowRestore_Click(object sender, System.EventArgs e)
+        {
+            RestoreWindow(settings.WindowPosition, settings.WindowSize);
         }
 
         /// <summary>
@@ -333,11 +362,19 @@ namespace PSOBBTools
 		}
 
         /// <summary>
+        /// 自動的にウィンドウの位置とサイズを復元
+        /// </summary>
+        private void menuWindowAutoRestore_Click(object sender, System.EventArgs e)
+		{
+            settings.WindowAutoRestoreEnabled = !settings.WindowAutoRestoreEnabled;
+		}
+
+        /// <summary>
         /// logフォルダを開く
         /// </summary>
         private void menuOpenFolderLog_Click(object sender, System.EventArgs e)
 		{
-            OpenFolder(settings.PSOBBFolder + '\\' + Settings.logFolder);
+            OpenFolder(settings.PSOBBFolder + Path.DirectorySeparatorChar + Settings.logFolder);
 		}
 
         /// <summary>
@@ -345,7 +382,7 @@ namespace PSOBBTools
         /// </summary>
         private void menuOpenFolderBmp_Click(object sender, System.EventArgs e)
 		{
-            OpenFolder(settings.PSOBBFolder + '\\' + Settings.bmpFolder);
+            OpenFolder(settings.PSOBBFolder + Path.DirectorySeparatorChar + Settings.bmpFolder);
         }
 
         /// <summary>
@@ -384,8 +421,34 @@ namespace PSOBBTools
             Application.Exit();
 		}
 
-		private void systemButtonTimer_Tick(object sender, EventArgs e)
+		private void windowTimer_Tick(object sender, EventArgs e)
 		{
+            if (!WindowExists())
+            {
+                // ウィンドウが無くなっていたら、次回起動時のためにtrueに戻す
+                firstTime = true;
+
+                return;
+            }
+
+            if (settings.SystemButtonsEnabled)
+            {
+                AddSystemButton();
+            }
+
+            if (settings.WindowAutoRestoreEnabled && firstTime)
+            {
+                RestoreWindow(settings.WindowPosition, settings.WindowSize);
+            }
+
+            firstTime = false;
+		}
+
+        /// <summary>
+        /// システムボタンを追加
+        /// </summary>
+        private void AddSystemButton()
+        {
 			IntPtr hwnd = Window.FindWindow(Settings.windowClassName, null);
 
 			if (hwnd != IntPtr.Zero)
@@ -407,6 +470,82 @@ namespace PSOBBTools
                         Window.SetWindowPosFlags.SWP_NOACTIVATE);
 			}
 		}
+
+        /// <summary>
+        /// ウィンドウの位置とサイズを保存
+        /// </summary>
+        private void SaveWindow()
+        {
+            IntPtr hwnd = Window.FindWindow(Settings.windowClassName, null);
+
+            if (hwnd == IntPtr.Zero)
+            {
+                MessageBox.Show("PSOBBのウィンドウが見つかりません。", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else
+            {
+                Window.RECT rect;
+
+                if (Window.GetWindowRect(hwnd, out rect))
+                {
+                    settings.WindowPosition = new Point(rect.left, rect.top);
+                }
+                else
+                {
+                    MessageBox.Show("ウィンドウ位置の取得に失敗しました。", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+
+                if (Window.GetClientRect(hwnd, out rect))
+                {
+                    settings.WindowSize = new Size(rect.right, rect.bottom);
+                }
+                else
+                {
+                    MessageBox.Show("ウィンドウサイズの取得に失敗しました。", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        /// <summary>
+        /// ウィンドウの位置とサイズを復元
+        /// </summary>
+        private void RestoreWindow(Point position, Size size)
+        {
+            IntPtr hwnd = Window.FindWindow(Settings.windowClassName, null);
+
+            if (hwnd == IntPtr.Zero)
+            {
+                MessageBox.Show("PSOBBのウィンドウが見つかりません。", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else
+            {
+                Window.WindowStyleFlags style = (Window.WindowStyleFlags)Window.GetWindowLong(hwnd, Window.GetWindowLongFlags.GWL_STYLE);
+                int exStyle = Window.GetWindowLong(hwnd, Window.GetWindowLongFlags.GWL_EXSTYLE);
+                Window.RECT rect;
+
+                rect.left = rect.top = 0;
+                rect.right = size.Width;
+                rect.bottom = size.Height;
+
+                if (Window.AdjustWindowRectEx(ref rect, style, false, (uint)exStyle))
+                {
+                    Window.SetWindowPos(hwnd, IntPtr.Zero, position.X, position.Y, rect.right - rect.left, rect.bottom - rect.top,
+                        Window.SetWindowPosFlags.SWP_NOACTIVATE |
+                        Window.SetWindowPosFlags.SWP_NOOWNERZORDER |
+                        Window.SetWindowPosFlags.SWP_NOZORDER);
+                }
+            }
+        }
+
+        /// <summary>
+        /// PSOBBのウィンドウが存在するか調べる
+        /// </summary>
+        private bool WindowExists()
+		{
+			IntPtr hwnd = Window.FindWindow(Settings.windowClassName, null);
+
+            return (hwnd != IntPtr.Zero);
+        }
 
         /// <summary>
         /// チャットログウィンドウ表示
@@ -445,27 +584,6 @@ namespace PSOBBTools
                 formMagTimer.Activate();
 			}
 		}
-
-        /// <summary>
-        /// ウィンドウサイズの変更ウィンドウ表示
-        /// </summary>
-        private void ShowWindowResize()
-        {
-            // すでに表示されているか？
-            if (formWindowResize == null || formWindowResize.IsDisposed)
-            {
-                // ウィンドウサイズの変更ウィンドウ表示
-                using (formWindowResize = new FormWindowResize(settings))
-                {
-                    formWindowResize.ShowDialog();
-                }
-            }
-            else
-            {
-                // アクティブにする
-                formWindowResize.Activate();
-            }
-        }
 
         /// <summary>
         /// 設定ウィンドウ表示
@@ -571,7 +689,7 @@ namespace PSOBBTools
             }
             else
             {
-                filePath = Settings.settingsFolder + @"\" + Settings.settingsFile;
+                filePath = Settings.settingsFolder + Path.DirectorySeparatorChar + Settings.settingsFile;
             }
 
 			if (File.Exists(filePath))
@@ -605,7 +723,7 @@ namespace PSOBBTools
             }
             else
             {
-                filePath = Settings.settingsFolder + @"\" + Settings.settingsFile;
+                filePath = Settings.settingsFolder + Path.DirectorySeparatorChar + Settings.settingsFile;
 
                 // 保存フォルダ作成
                 if (!Directory.Exists(Settings.settingsFolder))
@@ -641,15 +759,15 @@ namespace PSOBBTools
         /// </summary>
         private void ApplySettings()
 		{
-			systemButtonTimer.Enabled = settings.SystemButtonsEnabled;
+			windowTimer.Enabled = (settings.SystemButtonsEnabled || settings.WindowAutoRestoreEnabled);
 
             // 一旦監視を停止
             logWatcher.EnableRaisingEvents = bmpWatcher.EnableRaisingEvents = false;
 
 			if (!String.IsNullOrEmpty(settings.PSOBBFolder) && Directory.Exists(settings.PSOBBFolder))
 			{
-				logWatcher.Path = settings.PSOBBFolder + @"\" + Settings.logFolder;
-				bmpWatcher.Path = settings.PSOBBFolder + @"\" + Settings.bmpFolder;
+				logWatcher.Path = settings.PSOBBFolder + Path.DirectorySeparatorChar + Settings.logFolder;
+				bmpWatcher.Path = settings.PSOBBFolder + Path.DirectorySeparatorChar + Settings.bmpFolder;
 				logWatcher.EnableRaisingEvents = settings.TeamChimeEnabled;
 				bmpWatcher.EnableRaisingEvents = settings.SSCompressionEnabled;
 			}
